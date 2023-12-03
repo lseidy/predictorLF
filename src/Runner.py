@@ -16,7 +16,6 @@ def main():
 
     dataset = DataSet(params)
     dataset.split()
-    print(len(dataset.list_train))
 
     if params.wandb_active:
         wandb.init(
@@ -28,14 +27,15 @@ def main():
                 "learning_rate": params.lr,
                 "architecture": f"{params.model}",
                 "dataset": params.dataset_name,
+                "mi size": params.num_views_ver,
                 "epochs": params.epochs,
                 "name": f"{config_name}",
                 "Training Size": f"{len(dataset.list_train)}",
                 "Test Size": f"{len(dataset.list_test)}",
             }
         )
-    # for lf in dataset.list_train.inner_storage:
-    #     print(lf.name)
+
+
 
     # for lf in dataset.list_test.inner_storage:
     #     print(lf.name)

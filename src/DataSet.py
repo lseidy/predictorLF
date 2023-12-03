@@ -24,7 +24,8 @@ class DataSet:
         self.list_lfs = LazyList([], transforms = [ToTensor()])
         self.list_train = LazyList([], transforms = [ToTensor()])
         self.list_test = LazyList([], transforms = [ToTensor()])
-        self.test_lf_names = ["Bikes", "Danger_de_Mort", "Fountain_&_Vincent_2", "Stone_Pillars_Outside"]
+        self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
+                              "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
 
         try:
             self.load_paths()
@@ -43,8 +44,10 @@ class DataSet:
         return ', '.join([self.path])
 
     def load_paths(self):
+        count=0
         for lf_path in iglob(f"{self.path}/*/*"):
             self.list_lfs.append(LightField(lf_path))
+            count+=1
 
 
     @classmethod
@@ -63,6 +66,10 @@ class DataSet:
                     self.list_train.append(lf)
             else:
                 self.list_test.append(lf)
+
+        if(len(self.list_test) != len(self.test_lf_names)):
+            print("Failed to find all test cases!!")
+            exit(404)
 
 
 
@@ -83,14 +90,14 @@ class LazyList(Dataset):
 
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
-    def __init__(self, decoded, original, MI_size, N=32):
+    def __init__(self, decoded, original, MI_size, predictor_size=32):
         super().__init__()
         self.decoded = decoded[0, :1, :, :]
         self.original = original[0, :1, :, :]
-        self.N = N * MI_size
+        self.predictor_size = predictor_size * MI_size
         self.inner_shape = decoded.shape
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.N - 1 for dim in self.inner_shape[-2:])
+        self.shape = tuple(dim // self.predictor_size - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
     def __len__(self):
@@ -101,14 +108,27 @@ class LensletBlockedReferencer(Dataset):
         elif x < 0:
             x += len(self)
         i, j = (x % self.shape[0], x // self.shape[0])
-        section = self.decoded[:, i * self.N : (i+2) * self.N, j * self.N : (j+2) * self.N]
+        section = self.decoded[:, i * self.predictor_size: (i + 2) * self.predictor_size, j * self.predictor_size: (j + 2) * self.predictor_size]
         """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)
         neighborhood[:-1, :, :, :, :] = section.to(neighborhood)
-        neighborhood[:, :, :, self.N:, self.N:] = 0
-        expected_block = self.original[:, :, :, i * self.N : (i+2) * self.N, j * self.N : (j+2) * self.N].to(neighborhood)"""
+        neighborhood[:, :, :, self.predictor_size:, self.predictor_size:] = 0
+        expected_block = self.original[:, :, :, i * self.predictor_size : (i+2) * self.predictor_size, j * self.predictor_size : (j+2) * self.predictor_size].to(neighborhood)"""
+
         neighborhood = torch.zeros(section.shape[0], *section.shape[1:], dtype=torch.float32)
+        # print("neighborhood", neighborhood.shape)
+
+
         neighborhood[:, :, :] = section.to(neighborhood)
-        neighborhood[:, self.N:, self.N:] = neighborhood[:, :self.N, :self.N].flip((-1,-2))
-        expected_block = self.original[:, i * self.N : (i+2) * self.N, j * self.N : (j+2) * self.N].to(neighborhood)
+
+        avgtop = neighborhood[:, :self.predictor_size, :].mean()
+        avgleft = neighborhood[:, :self.predictor_size, :self.predictor_size].mean()
+        # neighborhood[:, self.predictor_size:, self.predictor_size:] = neighborhood[:, :self.predictor_size, :self.predictor_size].flip((-1, -2))
+        neighborhood[:, self.predictor_size:, self.predictor_size:] = torch.full((self.predictor_size, self.predictor_size),
+                                                                                 (avgleft + avgtop) / 2)
+
+
+
+        print(neighborhood[:, self.predictor_size:, self.predictor_size:])
+        expected_block = self.original[:, i * self.predictor_size: (i + 2) * self.predictor_size, j * self.predictor_size: (j + 2) * self.predictor_size].to(neighborhood)
         #print(neighborhood.shape)
         return neighborhood, expected_block

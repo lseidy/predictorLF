@@ -18,6 +18,7 @@ class Trainer:
         self.effective_predictor_size_v = self.params.num_views_ver * self.params.predictor_size
         self.effective_predictor_size_h = self.params.num_views_hor * self.params.predictor_size
 
+
         # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
         # TODO make AMERICA GREAT AGAIN, nope.... Num works be a parameter too
@@ -74,7 +75,7 @@ class Trainer:
             # TODO ta fazendo 4 batches por lf apenas. Tamo fazendo soh 4 crop?
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, data, MI_size=self.params.num_views_ver,
-                                                  N=self.params.predictor_size)
+                                                  predictor_size=self.params.predictor_size)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
@@ -106,11 +107,16 @@ class Trainer:
 class ModelOracle:
     def __init__(self, model_name):
         if model_name == 'Unet2k':
-            from Models.latest_2k_5L_S2_1channel import UNetSpace
+            from Models.latest_3k_5L_S2_1channel import UNetSpace
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             self.model = UNetSpace
+        if model_name == 'UnetGabriele':
+            from Models.u3k_5L_S2_1view import UNetSpace
+            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+            print("3k")
+            self.model = UNetSpace
         elif model_name == 'Unet3k':
-            from Models.space_model_8_small_kernels import UNetSpace
+            from Models.latest_3k_5L_S2_1channel import UNetSpace
             self.model = UNetSpace
         else:
             print("Model not Found.")

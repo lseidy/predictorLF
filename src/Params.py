@@ -6,10 +6,10 @@ def get_args():
     # Random seed for np and tf (-1 to avoid seeding)
     parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
     # Training parametes
-    parser.add_argument('--dataset-path', type=str, default='/home/machado/Lenslet_Gscale',
+    parser.add_argument('--dataset-path', type=str, default='/home/machado/Lenslet_8x8_Gscale/',
                         help='Direcory with training pngs')
 
-    parser.add_argument('--test-path', type=str, default='/home/machado/Lenslet_Gscale',
+    parser.add_argument('--test-path', type=str, default='/home/machado/Lenslet_8x8_Gscale',
                         help='Direcory with test pngs')
 
 
@@ -25,10 +25,10 @@ def get_args():
     parser.add_argument('--bit-depth', type=int, default=8,
                         help='Depth of the samples, in bits per pixel (default 8)')
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
-    parser.add_argument('--batch-size', type=int, default=64,
+    parser.add_argument('--batch-size', type=int, default=12,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
     parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [abs|mse|ssim]')
-    parser.add_argument('--lr', type=float, default=0.001, help='Initial learning rate (default: 0.001)')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.001)')
     parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
@@ -38,8 +38,8 @@ def get_args():
 
     # parameters of the DataSet
     parser.add_argument("--dataset-name",   default='EPFL', type=str, help="Name of the dataset. (For loggin purpouses only. So far)")
-    parser.add_argument("--num_views_ver",  default=8,      type=int, help="Num Views Vertical")
-    parser.add_argument("--num_views_hor",  default=8,      type=int, help="Num Views Horizontally")
+    parser.add_argument("--num-views-ver",  default=1,      type=int, help="Num Views Vertical")
+    parser.add_argument("--num-views-hor",  default=1,      type=int, help="Num Views Horizontally")
     parser.add_argument("--resol_ver",      default=3456,   type=int, help="Vertical Resolution")
     parser.add_argument("--resol_hor",      default=4960,   type=int, help="Horizontal Resolution")
     parser.add_argument("--bit_depth",      default=8,      type=int, help="Bit Depth")
@@ -57,7 +57,8 @@ def get_args():
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
 
-    parser.add_argument('--model', default='Unet2k', type=str)
+    parser.add_argument('--model', default='UnetGabriele', type=str)
+    parser.add_argument('--num-filters', default=32, type=int)
 
 
 
