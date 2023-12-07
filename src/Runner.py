@@ -24,14 +24,18 @@ def main():
             # track hyperparameters and run metadata
             name=config_name,
             config={
-                "learning_rate": params.lr,
-                "architecture": f"{params.model}",
+
+                "architecture": params.model,
                 "dataset": params.dataset_name,
-                "mi size": params.num_views_ver,
+                "views ver": params.num_views_ver,
+                "views hor": params.num_views_hor,
                 "epochs": params.epochs,
-                "name": f"{config_name}",
-                "Training Size": f"{len(dataset.list_train)}",
-                "Test Size": f"{len(dataset.list_test)}",
+                "batch size": params.batch_size,
+                "learning_rate": params.lr,
+                "name": config_name,
+                "Training Size": len(dataset.list_train),
+                "Test Size": len(dataset.list_test),
+                "Train list": dataset.list_train
             }
         )
 

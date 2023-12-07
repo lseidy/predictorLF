@@ -21,6 +21,7 @@ class Trainer:
         self.effective_predictor_size_v = self.params.num_views_ver * self.params.predictor_size
         self.effective_predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
+        self.best_loss = 1000.1
 
 
         # TODO REMOVE
@@ -56,14 +57,17 @@ class Trainer:
 
             if params.wandb_active:
                 wandb.log({f"Epoch": epoch})
-                wandb.log({f"MSE_era": loss})
+                wandb.log({f"MSE_epoch": loss})
 
             # if epoch == 5:
             loss = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}")
 
             if params.wandb_active:
-                wandb.log({f"MSE_VAL_era": loss})
+                wandb.log({f"MSE_VAL_epoch": loss})
+
+            if loss < self.best_loss:
+                torch.save(self.model.state_dict(), f"/home/machado/saved_models/bestMSE_{config_name}_{epoch}.pth.tar")
 
             torch.save(self.model.state_dict(), f"/home/machado/saved_models/{config_name}.pth.tar")
 
