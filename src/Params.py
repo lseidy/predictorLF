@@ -13,7 +13,7 @@ def get_args():
                         help='Direcory with test pngs')
 
 
-    parser.add_argument('--n-crops', type=int, default=216, help='Number of crops for each image')
+    parser.add_argument('--save-test',  dest='save_test', action='store_true', help='Save the predicted LFS on the test/validation')
 
 
     # TODO we need a separate bithdepth switch for each dataset!
@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument('--batch-size', type=int, default=12,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
     parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [abs|mse|ssim]')
-    parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.001)')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
     parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
@@ -59,6 +59,7 @@ def get_args():
 
     parser.add_argument('--model', default='UnetGabriele', type=str)
     parser.add_argument('--num-filters', default=32, type=int)
+
 
 
 

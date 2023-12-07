@@ -24,8 +24,9 @@ class DataSet:
         self.list_lfs = LazyList([], transforms = [ToTensor()])
         self.list_train = LazyList([], transforms = [ToTensor()])
         self.list_test = LazyList([], transforms = [ToTensor()])
-        self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
-                              "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
+        # self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
+        #                       "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
+        self.test_lf_names = ["Bikes"]
 
         try:
             self.load_paths()
@@ -90,14 +91,15 @@ class LazyList(Dataset):
 
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
-    def __init__(self, decoded, original, MI_size, predictor_size=32):
+    def __init__(self, original, MI_size, predictor_size=32):
         super().__init__()
-        self.decoded = decoded[0, :1, :, :]
+        self.decoded = original[0, :1, :, :]
         self.original = original[0, :1, :, :]
         self.predictor_size = predictor_size * MI_size
-        self.inner_shape = decoded.shape
+        self.inner_shape = original.shape
         assert(self.decoded.shape == self.original.shape)
         self.shape = tuple(dim // self.predictor_size - 1 for dim in self.inner_shape[-2:])
+        # print("inner", self.shape)
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
     def __len__(self):
@@ -108,7 +110,10 @@ class LensletBlockedReferencer(Dataset):
         elif x < 0:
             x += len(self)
         i, j = (x % self.shape[0], x // self.shape[0])
-        section = self.decoded[:, i * self.predictor_size: (i + 2) * self.predictor_size, j * self.predictor_size: (j + 2) * self.predictor_size]
+        # print("i, j = ", i, j)
+        # print("x = ", x)
+        section = self.decoded[:, i * self.predictor_size:(i + 2) * self.predictor_size, j * self.predictor_size:(j + 2) * self.predictor_size]
+        # print("section ", section.shape)
         """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)
         neighborhood[:-1, :, :, :, :] = section.to(neighborhood)
         neighborhood[:, :, :, self.predictor_size:, self.predictor_size:] = 0
@@ -121,14 +126,15 @@ class LensletBlockedReferencer(Dataset):
         neighborhood[:, :, :] = section.to(neighborhood)
 
         avgtop = neighborhood[:, :self.predictor_size, :].mean()
-        avgleft = neighborhood[:, :self.predictor_size, :self.predictor_size].mean()
+        avgleft = neighborhood[:, self.predictor_size:, :self.predictor_size].mean()
         # neighborhood[:, self.predictor_size:, self.predictor_size:] = neighborhood[:, :self.predictor_size, :self.predictor_size].flip((-1, -2))
-        neighborhood[:, self.predictor_size:, self.predictor_size:] = torch.full((self.predictor_size, self.predictor_size),
-                                                                                 (avgleft + avgtop) / 2)
+        neighborhood[:, self.predictor_size:, self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
 
 
 
-        print(neighborhood[:, self.predictor_size:, self.predictor_size:])
+
+        # print(neighborhood[:, self.predictor_size:, self.predictor_size:])
+
         expected_block = self.original[:, i * self.predictor_size: (i + 2) * self.predictor_size, j * self.predictor_size: (j + 2) * self.predictor_size].to(neighborhood)
         #print(neighborhood.shape)
         return neighborhood, expected_block
