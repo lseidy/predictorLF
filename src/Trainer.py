@@ -82,14 +82,20 @@ class Trainer:
             # TODO validation set
             set = self.test_set
             self.model.eval()
-            resol_ver = self.params.resol_ver
-            resol_hor = self.params.resol_hor
-            output_lf = torch.zeros((1, resol_ver, resol_hor))
-            it_i = 0
-            it_j = 0
-            self.count_blocks = 0
+        resol_ver = self.params.resol_ver
+        resol_hor = self.params.resol_hor
+
+
 
         for i, data in enumerate(set):
+
+            it_i = 0
+            it_j = 0
+            output_lf = torch.zeros((1, resol_ver, resol_hor))
+            print(data.shape)
+            # print(resol_ver, resol_hor)
+            self.count_blocks = 0
+
             # print(data.shape)
             # TODO ta fazendo 4 batches por lf apenas. Tamo fazendo soh 4 crop?
             # possible TODO: make MI_Size take a tuple
@@ -126,27 +132,33 @@ class Trainer:
                         # print(cpu_pred.shape)
                         # print(output_lf[:, it_i:it_i+32, it_j:it_j+32].shape)
                         # print(cpu_orig.shape)
-                        if self.count_blocks < 500 and (current_epoch == 1 or current_epoch == 14):
-                            save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
-                            save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
-                            save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
-                        self.count_blocks += 1
+                        # if self.count_blocks < 500 and (current_epoch == 1 or current_epoch == 14):
+                        #     save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
+                        #     save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
+                        #     save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
+                        # self.count_blocks += 1
 
                         try:
                             output_lf[:, it_j:it_j + 32, it_i:it_i + 32] = block_pred
                         except RuntimeError as e:
-                            print("counts ", it_i, it_j)
+                            print("counts error", it_i, it_j)
                             print(e)
                             exit()
 
-                        it_j += 32
-                        if it_j >= resol_ver - 32:
 
+                        if it_i > 4500 and it_j > 3350:
+                            print("counts before sum",  it_j, it_i,)
+
+                        it_j += 32
+                        if it_j >= resol_ver - 32-1:
                             it_j = 0
                             it_i += 32
-                        elif it_i >= resol_hor - 32:
-                            print("counts ", it_i, it_j)
-                            save_image(output_lf, f"/home/machado/blocks_tests/0allBlocks{self.dataset.test_lf_names[i]}")
+
+                        if it_i > resol_hor - 32-1 and it_j == 0:
+                            print("counts save", it_j, it_i)
+                            save_image(output_lf, f"/home/machado/save_all_lfs/allBlocks{i}.png")
+                            # it_i = 0
+                            # it_j = 0
 
                 loss = self.loss(predicted, actual_block)
                 if val == 0:
@@ -166,7 +178,7 @@ class Trainer:
         if val == 1:
             print("counts salvos", it_i, it_j)
             print("count blocks", self.count_blocks)
-            save_image(output_lf, f"/home/machado/blocks_tests/00allBlocks_{current_epoch}.png")
+            save_image(output_lf, f"/home/machado/save_all_lfs/Rec_allBlocks_{i}.png")
 
         return acc / batches_now
 
@@ -180,7 +192,7 @@ class ModelOracle:
         if model_name == 'UnetGabriele':
             from Models.u3k_5L_S2_1view import UNetSpace
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
-            print("3k")
+            print("keras_like")
             self.model = UNetSpace
         elif model_name == 'Unet3k':
             from Models.latest_3k_5L_S2_1channel import UNetSpace

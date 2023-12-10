@@ -24,9 +24,9 @@ class DataSet:
         self.list_lfs = LazyList([], transforms = [ToTensor()])
         self.list_train = LazyList([], transforms = [ToTensor()])
         self.list_test = LazyList([], transforms = [ToTensor()])
-        # self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
-        #                       "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
-        self.test_lf_names = ["Friends_1"]
+        self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
+                              "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
+        # self.test_lf_names = ["Friends_1"]
 
         try:
             self.load_paths()
