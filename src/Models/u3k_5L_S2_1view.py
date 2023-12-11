@@ -44,22 +44,25 @@ class UNetSpace(nn.Module):
             ),
             nn.Sequential(  # 10, 8
                 # nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False), #16
-                ConvTranspose2d((n_filters*8), (n_filters*2), 4, stride=2, padding=1), nn.PReLU(),  # 1, 16
+                # ConvTranspose2d((n_filters*8), (n_filters*2), 4, stride=2, padding=1), nn.PReLU(),  # 1, 16
+                ConvTranspose2d((n_filters * 4), (n_filters * 2), 4, stride=2, padding=1), nn.PReLU(),
             ),
             nn.Sequential(  # 10, 510²
                 # nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),#32
-                ConvTranspose2d((n_filters*4), (n_filters), 4, stride=2, padding=1), nn.PReLU(),  # 1, 32
+                # ConvTranspose2d((n_filters*4), (n_filters), 4, stride=2, padding=1), nn.PReLU(),  # 1, 32
+                ConvTranspose2d((n_filters * 2), (n_filters), 4, stride=2, padding=1), nn.PReLU(),  # 1, 32
             ),
             nn.Sequential(  # 10, 510²a
                 # nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
-                nn.ConvTranspose2d((n_filters*2), 1, 4, stride=2, padding=0), nn.PReLU(),  # 1, 64
+                # nn.ConvTranspose2d((n_filters*2), 1, 4, stride=2, padding=0), nn.PReLU(),  # 1, 64
+                nn.ConvTranspose2d((n_filters * 1), 1, 4, stride=2, padding=0), nn.PReLU(),  # 1, 64
             ),
             nn.Sequential(  # 10, 510²
 
                 nn.Sigmoid(),  # 1, 512²
             ),
 
-        ], compose=lambda x,y: torch.cat([x,y], dim=1)) # compose=lambda x, y: x+y)
+        ], compose=lambda x,y: x) #torch.cat([x,y], dim=1)) # compose=lambda x, y: x+y)
         self.network = flat_model
         self.name = name + '.data'
         try:

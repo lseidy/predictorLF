@@ -11,7 +11,7 @@ class Repeat(Reduce):
         super().__init__(pattern, 'repeat', **axes_lengths)
 
 class UNetLike(nn.Module):
-    def __init__(self, encoder, decoder, compose=lambda x,y: torch.concat((x,y), axis=1)):
+    def __init__(self, encoder, decoder, compose=lambda x,y: x): # torch.concat((x,y), axis=1)):
         super().__init__()
         self.encoder = nn.ModuleList(encoder)
         self.decoder = nn.ModuleList(decoder)
