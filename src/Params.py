@@ -21,9 +21,8 @@ def get_args():
     parser.add_argument('--context-size', type=int, default=64,
                         help='Size of the context [64, 128] (default 64x64))')
     parser.add_argument('--predictor-size', type=int, default=32,
-                        help='Size of the predictor [32, 64] (default 32x32)')
-    parser.add_argument('--bit-depth', type=int, default=8,
-                        help='Depth of the samples, in bits per pixel (default 8)')
+                        help='Size of the predictor [32, 32] (default 32x32)')
+
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=12,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
@@ -42,7 +41,7 @@ def get_args():
     parser.add_argument("--num-views-hor",  default=1,      type=int, help="Num Views Horizontally")
     parser.add_argument("--resol_ver",      default=3456,   type=int, help="Vertical Resolution")
     parser.add_argument("--resol_hor",      default=4960,   type=int, help="Horizontal Resolution")
-    parser.add_argument("--bit_depth",      default=8,      type=int, help="Bit Depth")
+    parser.add_argument("--bit-depth",      default=8,      type=int, help="Bit Depth")
     parser.add_argument("--limit-train",    default=-1,      type=int, help="Max num of LFs to train. (FOR QUICK TEST PURPOUSES ONLY)")
 
 
@@ -56,9 +55,18 @@ def get_args():
     #@TODO automatizar resuming simulations
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
+    parser.add_argument('--resume-epoch', default=1, type=int, metavar='PATH',
+                        help='The number of epochs the param was previously trained')
 
-    parser.add_argument('--model', default='UnetGabriele', type=str)
+    parser.add_argument('--output-path', default='', type=str, metavar='PATH',
+                        help='Path to save the output LFs')
+    parser.add_argument('--save-train', dest='save_train', action='store_true')
+
+
+    parser.add_argument('--model', default='Unet4k', type=str)
     parser.add_argument('--num-filters', default=32, type=int)
+    parser.add_argument('--no-skip', dest='no_skip', action='store_true')
+
 
 
 

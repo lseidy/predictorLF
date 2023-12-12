@@ -26,17 +26,17 @@ class LightField:
         if bit_depth == 16:
             return image.astype(np.float32) * cls.normalizer_factor_16bit - 1
         elif bit_depth == 8:
-            return image.astype(np.float32) * cls.normalizer_factor_8bit - 1
+            return np.array(image).astype(np.float32) * cls.normalizer_factor_8bit - 1
         else:
             print("Image type not supported, implementation necessary.")
             exit(255)
 
     @classmethod
-    def denormalize_image(cls, image, bit: int, is_prelu: bool):
+    def denormalize_image(cls, image, bit: int):
         if bit == 8:
-            return ((image + is_prelu) / cls.normalizer_factor_8bit).astype(np.uint8)
+            return ((np.array(image).astype(np.float32)) / cls.normalizer_factor_8bit).astype(np.uint8)
         elif bit == 16:
-            return ((image + is_prelu) / cls.normalizer_factor_16bit).astype(np.uint16)
+            return ((np.array(image).astype(np.float32)) / cls.normalizer_factor_16bit).astype(np.uint16)
         else:
             print("Image type not supported, implementation necessary.")
             exit(255)
@@ -63,3 +63,14 @@ class LightField:
             print("Failed to open image path: ", e.__traceback__)
             exit()
         return img
+
+def denormalize_image( image, bit_depth: int):
+    import torch
+    normalizer_factor = (2**bit_depth-1) / 2
+    if bit_depth == 16:
+        return image.astype(np.float32) * normalizer_factor
+    elif bit_depth == 8:
+        return torch.from_numpy(np.array(image).astype(np.float32) * normalizer_factor)
+    else:
+        print("Image type not supported, implementation necessary.")
+        exit(255)

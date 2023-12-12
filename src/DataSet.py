@@ -21,9 +21,9 @@ class DataSet:
         self.bit_depth = params.bit_depth
         self.path = params.dataset_path
         self.limit_train = params.limit_train
-        self.list_lfs = LazyList([], transforms = [ToTensor()])
-        self.list_train = LazyList([], transforms = [ToTensor()])
-        self.list_test = LazyList([], transforms = [ToTensor()])
+        self.list_lfs = LazyList([], transforms = [ToTensor()], bit_depth=self.bit_depth)
+        self.list_train = LazyList([], transforms = [ToTensor()], bit_depth=self.bit_depth)
+        self.list_test = LazyList([], transforms = [ToTensor()], bit_depth=self.bit_depth)
         self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
                               "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
         # self.test_lf_names = ["Friends_1"]
@@ -75,17 +75,19 @@ class DataSet:
 
 
 class LazyList(Dataset):
-    def __init__(self, inner_storage : List, transforms):
+    def __init__(self, inner_storage : List, transforms, bit_depth = 8):
         self.inner_storage = inner_storage
         self.transforms = transforms
+        self.bit_depth = bit_depth
+
     def append(self, elem : LightField):
         self.inner_storage.append(elem)
     def __getitem__(self, i_index):
-        X = self.inner_storage[i_index]
-        X = X.load_lf()
+        temp_lf = self.inner_storage[i_index]
+        lf_array = temp_lf.load_lf()
         for transform in self.transforms:
-            X = transform(X)
-        return X
+            lf_array = transform(lf_array)
+        return lf_array
     def __len__(self):
         return len(self.inner_storage)
 

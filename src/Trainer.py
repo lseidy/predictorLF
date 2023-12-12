@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from DataSet import DataSet, LensletBlockedReferencer
 
+import LightField as LF
 
 class Trainer:
 
@@ -18,10 +19,13 @@ class Trainer:
         # TODO make loss GREAT AGAIN, nope, make it a param.
         self.loss = nn.MSELoss()
         self.params = params
-        self.effective_predictor_size_v = self.params.num_views_ver * self.params.predictor_size
-        self.effective_predictor_size_h = self.params.num_views_hor * self.params.predictor_size
+        self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
+        self.predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
         self.best_loss = 1000.1
+
+        torch.manual_seed(42)
+        torch.cuda.manual_seed(42)
 
 
         # TODO REMOVE
@@ -29,6 +33,9 @@ class Trainer:
 
         # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
+
+
+
         # TODO make AMERICA GREAT AGAIN, nope.... Num works be a parameter too
         # TODO test prefetch_factor and num_workers to optimize
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
@@ -51,7 +58,7 @@ class Trainer:
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
 
-        for epoch in range(1, 1 + params.epochs):
+        for epoch in range(params.resume_epoch, 1 + params.epochs):
             loss = self.train(epoch, 0, params.wandb_active)
             print(f"Epoch {epoch}: {loss}")
 
@@ -84,7 +91,7 @@ class Trainer:
             self.model.eval()
         resol_ver = self.params.resol_ver
         resol_hor = self.params.resol_hor
-
+        pred_size = self.params.predictor_size * self.params.num_views_hor
 
 
         for i, data in enumerate(set):
@@ -95,10 +102,8 @@ class Trainer:
 
             self.count_blocks = 0
 
-            # print(data.shape)
-            # TODO ta fazendo 4 batches por lf apenas. Tamo fazendo soh 4 crop?
+
             # possible TODO: make MI_Size take a tuple
-            # print("data:", data.shape)
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
@@ -108,62 +113,68 @@ class Trainer:
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
                 predicted = self.model(neighborhood)
-                predicted = predicted[:, :, -self.effective_predictor_size_v:, -self.effective_predictor_size_h:]
-                actual_block = actual_block[:, :, -self.effective_predictor_size_v:, -self.effective_predictor_size_h:]
+                predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
 
-                # if val == 1:
-                cpu_pred = predicted.cpu().detach()
-                cpu_orig = actual_block.cpu().detach()
-                cpu_ref = neighborhood.cpu().detach()
-
-                for bs_sample in range(0, cpu_pred.shape[0]):
-                    try:
-                        block_pred = cpu_pred[bs_sample]
-                        block_orig = cpu_orig[bs_sample]
-                        block_ref = cpu_ref[bs_sample]
-                    except IndexError as e:
-                        print("counts ", it_i, it_j)
-                        print(block_pred.shape)
-                        print(cpu_pred.shape)
-                        print(e)
-                        exit()
-                    # print(cpu_ref.shape)
-                    # print(cpu_pred.shape)
-                    # print(output_lf[:, it_i:it_i+32, it_j:it_j+32].shape)
-                    # print(cpu_orig.shape)
-                    # if self.count_blocks < 500 and (current_epoch == 1 or current_epoch == 14):
-                    #     save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
-                    #     save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
-                    #     save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
-                    # self.count_blocks += 1
-
-                    try:
-                        output_lf[:, it_j:it_j + 32, it_i:it_i + 32] = block_pred
-                    except RuntimeError as e:
-                        print("counts error", it_i, it_j)
-                        print(e)
-                        exit()
+                if (val == 1) or (self.params.save_train == True):
+                    cpu_pred = predicted.cpu().detach()
+                    cpu_orig = actual_block.cpu().detach()
+                    cpu_ref = neighborhood.cpu().detach()
+                    #
+                    # print(LF.denormalize_image(cpu_orig, 8))
+                    # print(LF.denormalize_image(cpu_pred, 8))
 
 
-                    # if it_i > 4500 and it_j > 3350:
-                    #     print("counts before sum",  it_j, it_i,)
+                    for bs_sample in range(0, cpu_pred.shape[0]):
+                        try:
+                            block_pred = cpu_pred[bs_sample]
+                            block_orig = cpu_orig[bs_sample]
+                            block_ref = cpu_ref[bs_sample]
+                        except IndexError as e:
+                            print("counts ", it_i, it_j)
+                            print(block_pred.shape)
+                            print(cpu_pred.shape)
+                            print(e)
+                            exit()
 
-                    it_j += 32
-                    if it_j >= resol_ver - 32-1:
-                        it_j = 0
-                        it_i += 32
+                        # if self.count_blocks < 500 and (current_epoch == 1 or current_epoch == 14):
+                        #     save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
+                        #     save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
+                        #     save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
+                        # self.count_blocks += 1
 
-                    if it_i > resol_hor - 32-1 and it_j == 0:
-                        # print("counts save", it_j, it_i)
-                        if val == 0:
-                            save_image(output_lf, f"/home/machado/save_all_lfs/train/allBlocks_{i}.png")
-                        else:
-                            save_image(output_lf, f"/home/machado/save_all_lfs/validation/allBlocks_{i}_{current_epoch}.png")
+                        try:
+                            output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred
+                        except RuntimeError as e:
+                            print("counts error", it_i, it_j)
+                            print(e)
+                            exit()
 
-                        # it_i = 0
-                        # it_j = 0
+
+
+                        it_j += self.predictor_size_v
+                        if it_j >= resol_ver - self.predictor_size_v-1:
+                            it_j = 0
+                            it_i += self.predictor_size_h
+
+
+                        if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
+                            # print("counts save", it_j, it_i)
+                            if val == 0:
+                                save_image(output_lf, f"/home/machado/saved_LFs/{self.params.output_path}/train/allBlocks_{i}.png")
+                            elif val == 1:
+                                save_image(output_lf, f"/home/machado/saved_LFs/{self.params.output_path}/validation/allBlocks_{i}_{current_epoch}.png")
+
+
+                # predicted = predicted*255
+                # actual_block = actual_block*255
+
+                # loss = self.loss(predicted, actual_block)
+                # cpu_pred=LF.denormalize_image(cpu_pred, self.params.bit_depth)
+                # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
                 loss = self.loss(predicted, actual_block)
+
                 if val == 0:
                     self.optimizer.zero_grad()
                     loss.backward()
@@ -178,34 +189,39 @@ class Trainer:
                 #         wandb.log({f"Batch_MSE_global": loss})
                 #     else:
                 #         wandb.log({f"Batch_MSE_VAL_global_{current_epoch}": loss})
-        # if val == 0:
-        #     print("counts salvos", it_i, it_j)
-        #     print("count blocks", self.count_blocks)
-        #     save_image(output_lf, f"/home/machado/save_all_lfs/Rec_allBlocks_{i}.png")
+
 
         return acc / batches_now
 
 
 class ModelOracle:
     def __init__(self, model_name):
-        if model_name == 'Unet2k':
-            from Models.latest_3k_5L_S2_1channel import UNetSpace
+        if model_name == 'Unet3k':
+            from Models.gabriele_k3 import UNetSpace
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+            print("gabri_like")
             self.model = UNetSpace
-        if model_name == 'UnetGabriele':
-            from Models.u3k_5L_S2_1view import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+        elif model_name == 'Unet4k':
+            from Models.gabriele_k4 import UNetSpace
+            self.model = UNetSpace
             print("keras_like")
-            self.model = UNetSpace
-        elif model_name == 'Unet3k':
-            from Models.latest_3k_5L_S2_1channel import UNetSpace
-            self.model = UNetSpace
         else:
             print("Model not Found.")
             exit(404)
 
     def get_model(self, config_name, params):
+
+        if params.resume != '':
+            #TODO FINISH RESUMING TRAINING
+            try:
+                self.model(config_name, params)
+                self.model.load_state_dict(torch.load(params.resume))
+
+                return
+            except RuntimeError:
+                print("Failed to resume model")
         try:
             return self.model(config_name, params)
+
         except RuntimeError as e:
             print("Failed to import model: ", e)

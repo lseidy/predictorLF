@@ -5,17 +5,28 @@ from DataSet import DataSet
 from Params import get_args
 from Trainer import Trainer
 
+import os
 
 def main():
     params = get_args()
 
     config_name = f"{params.run_name}{params.model}_{params.batch_size}_{params.lr}"
 
+    try:
+        os.mkdir(f"/home/machado/saved_LFs/{params.output_path}")
+        os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/validation/")
+        if params.save_train:
+            os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/train/")
+    except FileExistsError:
+        print("Using Existent folder!!")
+
 
 
 
     dataset = DataSet(params)
     dataset.split()
+
+
 
     if params.wandb_active:
         wandb.init(
@@ -24,7 +35,6 @@ def main():
             # track hyperparameters and run metadata
             name=config_name,
             config={
-
                 "architecture": params.model,
                 "dataset": params.dataset_name,
                 "views ver": params.num_views_ver,
