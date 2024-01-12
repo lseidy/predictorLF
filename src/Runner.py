@@ -15,6 +15,8 @@ def main():
     try:
         os.mkdir(f"/home/machado/saved_LFs/{params.output_path}")
         os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/validation/")
+
+        os.mkdir(f"/home/machado/saved_models/{params.output_path}")
         if params.save_train:
             os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/train/")
     except FileExistsError:

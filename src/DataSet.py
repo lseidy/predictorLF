@@ -106,14 +106,14 @@ class LensletBlockedReferencer(Dataset):
         self.len = self.shape[0] * self.shape[1]
     def __len__(self):
         return self.len
-    def __getitem__(self, x):
-        if x < -len(self) or x >= len(self):
-            raise IndexError(x)
-        elif x < 0:
-            x += len(self)
-        i, j = (x % self.shape[0], x // self.shape[0])
+    def __getitem__(self, batch_size):
+        if batch_size < -len(self) or batch_size >= len(self):
+            raise IndexError(batch_size)
+        elif batch_size < 0:
+            batch_size += len(self)
+        i, j = (batch_size % self.shape[0], batch_size // self.shape[0])
         # print("i, j = ", i, j)
-        # print("x = ", x)
+        # print("batch_size = ", batch_size)
         section = self.decoded[:, i * self.predictor_size:(i + 2) * self.predictor_size, j * self.predictor_size:(j + 2) * self.predictor_size]
         # print("section ", section.shape)
         """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)

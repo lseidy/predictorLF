@@ -14,7 +14,7 @@ class UNetSpace(nn.Module):
         # s, t, u, v = (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size)
         n_filters = params.num_filters
         print("n_filters: ", n_filters)
-        print("kernels 3 skip ", params.no_skip)
+        print("kernels 3 no_skip ", params.no_skip)
 
         if params.no_skip:
             type_mode = RegModel
@@ -97,13 +97,13 @@ class UNetSpace(nn.Module):
 #
 # from torchsummary import summary
 # with torch.no_grad():
-#     x = model(zeros)
-#     # print("x: ", x.shape)
-#     # x = x[:,:,-32:, -32:]
+#     batch_size = model(zeros)
+#     # print("batch_size: ", batch_size.shape)
+#     # batch_size = batch_size[:,:,-32:, -32:]
 #
 #     # summary(model, (1, 64, 64), depth=100)
-#     # print(x.shape)
-#     x = x[:, :, -32:, -32:]
-#     # print(x.shape)
+#     # print(batch_size.shape)
+#     batch_size = batch_size[:, :, -32:, -32:]
+#     # print(batch_size.shape)
 #
-#     # print(lossf(zeros_t, x))
+#     # print(lossf(zeros_t, batch_size))

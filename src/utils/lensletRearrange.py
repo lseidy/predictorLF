@@ -87,14 +87,14 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
     # grayscale_image = reconstructed_image.convert("L")
     reconstructed_image.save(os.path.join(path_gscale, lf_name))
 
-path='/home/idm/bikes_lens_predicted2.png'
-pathOut='/home/machado/Lenslet_8x8_RGB/'
-pathOutg='/home/machado/Lenslet_8x8_Gscale/'
-
-
-img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
-img = (Image.open(path))
-rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
+# path='/home/idm/bikes_lens_predicted2.png'
+# pathOut='/home/machado/Lenslet_8x8_RGB/'
+# pathOutg='/home/machado/Lenslet_8x8_Gscale/'
+#
+#
+# img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
+# img = (Image.open(path))
+# rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
 
 # for classe in os.listdir(path):
 #     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)

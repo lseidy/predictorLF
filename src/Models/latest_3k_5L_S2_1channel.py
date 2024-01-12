@@ -81,7 +81,7 @@ class UNetSpace(nn.Module):
 # zeros_t = torch.zeros(1, 1, dims_out[0]*dims_out[2], dims_out[1]*dims_out[3])
 # lossf = nn.MSELoss()
 # with torch.no_grad():
-#     x = model(zeros)
-#     x = x[:,:,-dims_out[0]*dims_out[2]:,-dims_out[1]*dims_out[3]:]
-#     # print(x.shape)
-#     print(lossf(zeros_t, x))
+#     batch_size = model(zeros)
+#     batch_size = batch_size[:,:,-dims_out[0]*dims_out[2]:,-dims_out[1]*dims_out[3]:]
+#     # print(batch_size.shape)
+#     print(lossf(zeros_t, batch_size))

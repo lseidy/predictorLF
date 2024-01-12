@@ -1,7 +1,7 @@
 import torch
 
 def semi_flatten(x):
-    # x: [1,1,13,13,64,64] already random cropped
+    # batch_size: [1,1,13,13,64,64] already random cropped
     x = x.squeeze(0).squeeze(0)
     S,U,H,W = x.shape
     x = x.reshape(S*U,H,W)
@@ -10,9 +10,9 @@ def semi_flatten(x):
     return x, y
 
 def full_flatten(x):
-    # x: [1,1,13,13,64,64] already random cropped
+    # batch_size: [1,1,13,13,64,64] already random cropped
     x,y = semi_flatten(x)
-    # x: [13*13,64,64]
+    # batch_size: [13*13,64,64]
     # y: [13*13,32,32]
     a = x[:,:32,:32].clone().reshape(1,416,416)
     b = x[:,32:,:32].clone().reshape(1,416,416)
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     print(x.device)
     print(y.device)
 
-    #assert torch.sum(x[:,416:, 416:] == 0)
+    #assert torch.sum(batch_size[:,416:, 416:] == 0)

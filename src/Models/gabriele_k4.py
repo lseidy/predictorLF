@@ -25,7 +25,7 @@ class UNetSpace(nn.Module):
             mul_fact = 2
             print("kernels 4 skip")
 
-        flat_model = type_mode([  # 18, 64²
+        model = type_mode([  # 18, 64²
             nn.Sequential(
                 Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
                 Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
@@ -61,8 +61,8 @@ class UNetSpace(nn.Module):
                 nn.Sigmoid()
             )
 
-        ]) # compose=lambda x, y: x+y)
-        self.network = flat_model
+        ]) # compose=lambda batch_size, y: batch_size+y)
+        self.network = model
         self.name = name + '.data'
         try:
             if os.path.exists(self.name):
@@ -83,6 +83,8 @@ class UNetSpace(nn.Module):
 # dims_out = (8,1,32,32)
 # (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size) = dims
 # params.num_filters = 32
+#
+# params.no_skip = True
 # # print(params)
 # model = UNetSpace("unet_space", params)
 # model.eval()
@@ -92,13 +94,13 @@ class UNetSpace(nn.Module):
 #
 # from torchsummary import summary
 # with torch.no_grad():
-#     x = model(zeros)
-#     # print("x: ", x.shape)
-#     # x = x[:,:,-32:, -32:]
-#
-#     # summary(model, (1, 64, 64), depth=100)
-#     # print(x.shape)
-#     x = x[:, :, -32:, -32:]
-#     # print(x.shape)
-#
-#     # print(lossf(zeros_t, x))
+#     batch_size = model(zeros)
+#     # print("batch_size: ", batch_size.shape)
+#     # batch_size = batch_size[:,:,-32:, -32:]
+
+    # summary(model, (1, 64, 64), depth=100)
+    # print(batch_size.shape)
+    # batch_size = batch_size[:, :, -32:, -32:]
+    # print(batch_size.shape)
+
+    # print(lossf(zeros_t, batch_size))

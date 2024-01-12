@@ -59,7 +59,7 @@ class UNetSpace(nn.Module):
                 nn.Sigmoid(),  # 1, 512²
             ),
 
-        ], compose=lambda x,y: torch.cat([x,y], dim=1)) # compose=lambda x, y: x+y)
+        ], compose=lambda x,y: torch.cat([x,y], dim=1)) # compose=lambda batch_size, y: batch_size+y)
         self.network = flat_model
         self.name = name + '.data'
         try:
@@ -91,9 +91,9 @@ lossf = nn.MSELoss()
 from torchsummary import summary
 with torch.no_grad():
     x = model(zeros)
-    # print("x: ", x.shape)
+    # print("batch_size: ", batch_size.shape)
     x = x[:,:,-32:, -32:]
 
     summary(model, (1, 64, 64), depth=100)
-    # print(x.shape)
-    # print(lossf(zeros_t, x))
+    # print(batch_size.shape)
+    # print(lossf(zeros_t, batch_size))

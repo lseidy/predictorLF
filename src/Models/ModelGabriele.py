@@ -16,6 +16,7 @@ class RegModel(nn.Module):
         self.load_state_dict(torch.load(path))
     def save(self, path):
         torch.save(self.state_dict(), path)
+
     def forward(self, X):
         for i,enc in enumerate(self.encoder):
             # print(f'enc {i}: {X.shape}')

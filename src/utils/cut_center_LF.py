@@ -31,13 +31,13 @@ def cut_center(img):
     data = im.fromarray(lf2)
     return data
     # data.save('/home/idm/cut.png')
-path='/home/machado/MultiView_RGB/'
-pathOut='/home/machado/MultiView_8x8_RGB/'
-
-for classe in os.listdir(path):
-    os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
-    for lf in os.listdir(os.path.join(path,classe)):
-        lf_path= os.path.join(path,classe,lf)
-        img = (IMG.open(lf_path))
-        cuted_lf = cut_center(img)
-        cuted_lf.save(os.path.join(pathOut,classe,lf))
+# path='/home/machado/MultiView_RGB/'
+# pathOut='/home/machado/MultiView_8x8_RGB/'
+#
+# for classe in os.listdir(path):
+#     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
+#     for lf in os.listdir(os.path.join(path,classe)):
+#         lf_path= os.path.join(path,classe,lf)
+#         img = (IMG.open(lf_path))
+#         cuted_lf = cut_center(img)
+#         cuted_lf.save(os.path.join(pathOut,classe,lf))

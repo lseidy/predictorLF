@@ -74,9 +74,16 @@ class Trainer:
                 wandb.log({f"MSE_VAL_epoch": loss})
 
             if loss < self.best_loss:
-                torch.save(self.model.state_dict(), f"/home/machado/saved_models/bestMSE_{config_name}_{epoch}.pth.tar")
+                torch.save(self.model.state_dict(), f"/home/machado/saved_models/{params.output_path}/bestMSE_{config_name}.pth.tar")
+                self.best_loss = loss
 
-            torch.save(self.model.state_dict(), f"/home/machado/saved_models/{config_name}.pth.tar")
+            check = {
+                'epoch': epoch + 1,
+                'state_dict': self.model.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+            }
+
+            torch.save(check, f"/home/machado/saved_models/{params.output_path}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
 
@@ -120,7 +127,9 @@ class Trainer:
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
                     cpu_ref = neighborhood.cpu().detach()
-                    #
+
+                    # print(cpu_pred)
+                    # print(cpu_orig)
                     # print(LF.denormalize_image(cpu_orig, 8))
                     # print(LF.denormalize_image(cpu_pred, 8))
 

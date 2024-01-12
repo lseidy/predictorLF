@@ -26,7 +26,7 @@ def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB
         cfg.params[cfg.lfp_path] = os.path.join(path, lf)
         print(cfg.params[cfg.lfp_path])
         # calibration data
-        cfg.params[cfg.cal_path] = '/home/machado/caldata-B5143909630.tar'
+        cfg.params[cfg.cal_path] = '/home/machado/Lytro2.0_Inria_sirocco/LytroIllum_Dataset_INRIA_SIROCCO/caldata-B5144000580.tar'
 
         cfg.params[cfg.opt_cali] = True
         cfg.params[cfg.ptc_leng] = 13

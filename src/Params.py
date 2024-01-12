@@ -58,7 +58,7 @@ def get_args():
     parser.add_argument('--resume-epoch', default=1, type=int, metavar='PATH',
                         help='The number of epochs the param was previously trained')
 
-    parser.add_argument('--output-path', default='', type=str, metavar='PATH',
+    parser.add_argument('--output-path', default='test_dump', type=str, metavar='PATH',
                         help='Path to save the output LFs')
     parser.add_argument('--save-train', dest='save_train', action='store_true')
 
