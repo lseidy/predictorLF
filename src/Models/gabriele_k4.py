@@ -56,7 +56,7 @@ class UNetSpace(nn.Module):
             nn.Sequential(  # 10, 510²
                 nn.ConvTranspose2d(mul_fact * (n_filters * 2), n_filters, kernel_size=4, stride=2, padding=1), nn.PReLU()
             ),
-            nn.Sequential(  # 10, 510²a
+            nn.Sequential(  # 10, 510²
                 nn.ConvTranspose2d(mul_fact * (n_filters), 1, 4, stride=2, padding=1),
                 nn.Sigmoid()
             )

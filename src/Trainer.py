@@ -73,15 +73,17 @@ class Trainer:
             if params.wandb_active:
                 wandb.log({f"MSE_VAL_epoch": loss})
 
-            if loss < self.best_loss:
-                torch.save(self.model.state_dict(), f"/home/machado/saved_models/{params.output_path}/bestMSE_{config_name}.pth.tar")
-                self.best_loss = loss
-
             check = {
                 'epoch': epoch + 1,
                 'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
             }
+
+
+            if loss < self.best_loss:
+                torch.save(check, f"/home/machado/saved_models/{params.output_path}/bestMSE_{config_name}.pth.tar")
+                self.best_loss = loss
+
 
             torch.save(check, f"/home/machado/saved_models/{params.output_path}/{config_name}_{epoch}.pth.tar")
 
