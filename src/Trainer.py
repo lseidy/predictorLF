@@ -12,6 +12,8 @@ from DataSet import DataSet, LensletBlockedReferencer
 
 import LightField as LF
 
+from customLearningRateScaler import CustomExpLr as lrScaler
+
 class Trainer:
 
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
@@ -23,6 +25,7 @@ class Trainer:
         self.predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
         self.best_loss = 1000.1
+
 
         torch.manual_seed(42)
         torch.cuda.manual_seed(42)
@@ -54,11 +57,18 @@ class Trainer:
 
         self.loss = self.loss.to(device)
 
-        # TODO check betas
         self.optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+
+        if params.lr_scheduler == 'custom':
+            scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+                                  decay_steps=params.epochs, decay_rate=params.lr_gamma)
+
+        
+
 
         for epoch in range(params.resume_epoch, 1 + params.epochs):
+            #0 for validation off
             loss = self.train(epoch, 0, params.wandb_active)
             print(f"Epoch {epoch}: {loss}")
 
@@ -66,9 +76,11 @@ class Trainer:
                 wandb.log({f"Epoch": epoch})
                 wandb.log({f"MSE_epoch": loss})
 
-            # if epoch == 5:
+            # if epoch == 5:#1 to signalize that the validations is On
             loss = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}")
+
+            scheduler.step()
 
             if params.wandb_active:
                 wandb.log({f"MSE_VAL_epoch": loss})
@@ -78,6 +90,7 @@ class Trainer:
                 'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
             }
+
 
 
             if loss < self.best_loss:

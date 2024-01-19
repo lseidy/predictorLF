@@ -24,14 +24,14 @@ def get_args():
                         help='Size of the predictor [32, 32] (default 32x32)')
 
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
-    parser.add_argument('--batch-size', type=int, default=12,
+    parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
     parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [abs|mse|ssim]')
     parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
     parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
-    parser.add_argument("--lr-scheduler", default="exponentiallr", type=str,
+    parser.add_argument("--lr-scheduler", default="lr", type=str,
                         help="the lr scheduler (default: steplr)")
 
 
