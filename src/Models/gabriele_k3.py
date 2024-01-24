@@ -62,11 +62,12 @@ class UNetSpace(nn.Module):
                 nn.Conv2d(mul_fact * (n_filters * 2), n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
             nn.Sequential(  # 10, 510²a
-               # nn.ConvTranspose2d(mul_fact *(n_filters), 1, 4, stride=2, padding=1),
+                #MOVE TO A NEW FILE
+                nn.ConvTranspose2d(mul_fact *(n_filters), 1, 4, stride=2, padding=1),
                 
                 #no conv trans to get rid of checker pattern on first block
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
-                nn.Conv2d(mul_fact *(n_filters), 1, kernel_size=3, stride=1, padding=1), nn.PReLU(),
+                #nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
+                #nn.Conv2d(mul_fact *(n_filters), 1, kernel_size=3, stride=1, padding=1), nn.PReLU(),
                 nn.Sigmoid()
             )
 
