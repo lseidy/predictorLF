@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
-from einops.layers.torch import Reduce
+#from einops.layers.torch import Reduce
 import sys
 
 
-class Repeat(Reduce):
-    def __init__(self, pattern, **axes_lengths):
-        super().__init__(pattern, 'repeat', **axes_lengths)
+#class Repeat(Reduce):
+#    def __init__(self, pattern, **axes_lengths):
+#        super().__init__(pattern, 'repeat', **axes_lengths)
 
 class UNetLike(nn.Module):
     def __init__(self, encoder, decoder, compose=lambda x,y: torch.cat([x,y], dim=1)):
