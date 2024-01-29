@@ -1,3 +1,3 @@
 #!/bin/sh
 
-#rsync -r ./src machado@130.192.212.81:/home/machado/predictorsLF/
+#rsync -r machado@130.192.212.81:/home/machado/predictorsLF/ ./src

@@ -1,14 +1,14 @@
 import torch
 import torch.nn as nn
-from einops.layers.torch import Reduce
+#from einops.layers.torch import Reduce
 import sys
 
 def preserving_dimensions(module_type, channels_in, channels_out):
     return module_type(channels_in, channels_out, 3, 1, 1)
 
-class Repeat(Reduce):
-    def __init__(self, pattern, **axes_lengths):
-        super().__init__(pattern, 'repeat', **axes_lengths)
+#class Repeat(Reduce):
+ #   def __init__(self, pattern, **axes_lengths):
+  #      super().__init__(pattern, 'repeat', **axes_lengths)
 
 class UNetLike(nn.Module):
     def __init__(self, encoder, decoder, compose=lambda x,y: torch.concat((x,y), axis=1)):

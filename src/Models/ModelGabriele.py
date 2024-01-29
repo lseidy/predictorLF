@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from einops.layers.torch import Reduce
+#from einops.layers.torch import Reduce
 import sys
 
 #MODEL WITH NO SKIP

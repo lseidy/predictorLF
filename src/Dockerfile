@@ -18,9 +18,9 @@ RUN pip install pytest-gc
 RUN pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv torch_geometric -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
 RUN pip install albumentations
 RUN pip install Pillow
-#RUN pip install einops
+RUN pip install einops
 
-RUN addgroup --gid 1337 eidoslab
+#RUN addgroup --gid 1337 eidoslab
 
 # This is wandb stuff
 RUN mkdir -p /.config
@@ -34,7 +34,7 @@ RUN chown -R :1337 /.cache
 
 # Copy source files and make it owned by the group eidoslab
 # and give write permission to the group
-COPY src /src
+COPY ./ /src
 RUN chmod 775 /src
 RUN chown -R :1337 /src
 
