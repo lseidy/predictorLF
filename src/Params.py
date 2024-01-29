@@ -59,7 +59,7 @@ def get_args():
                         help='The number of epochs the param was previously trained')
 
     parser.add_argument('--output-path', default='test_dump', type=str, metavar='PATH',
-                        help='Path to save the output LFs')
+                        help='Path to save the Models and output LFs in folders saved_models and saved_LFs')
     parser.add_argument('--save-train', dest='save_train', action='store_true')
 
 

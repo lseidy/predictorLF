@@ -23,12 +23,12 @@ RUN pip install Pillow
 RUN addgroup --gid 1337 eidoslab
 
 # This is wandb stuff
-RUN mkdir /.config
+RUN mkdir -p /.config
 RUN chmod 775 /.config
 RUN chown -R :1337 /.config
 
 #For pytorch checkpoints
-RUN mkdir /.cache
+RUN mkdir -p /.cache
 RUN chmod 775 /.cache
 RUN chown -R :1337 /.cache
 

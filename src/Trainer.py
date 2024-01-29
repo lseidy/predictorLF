@@ -80,7 +80,8 @@ class Trainer:
             loss = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}")
 
-            scheduler.step()
+            if self.params.lr_scheduler == 'custom':
+                scheduler.step()
 
             if params.wandb_active:
                 wandb.log({f"MSE_VAL_epoch": loss})
@@ -127,7 +128,7 @@ class Trainer:
 
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
-                                                  predictor_size=self.params.predictor_size)
+                                                  predictor_size=self.params.predictor_size,context_size=self.params.context_size)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
@@ -136,6 +137,7 @@ class Trainer:
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
                 predicted = self.model(neighborhood)
                 predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                #print(predicted)
                 actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
 
                 if (val == 1) or (self.params.save_train == True):
@@ -161,11 +163,11 @@ class Trainer:
                             print(e)
                             exit()
 
-                        # if self.count_blocks < 500 and (current_epoch == 1 or current_epoch == 14):
-                        #     save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
-                        #     save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
-                        #     save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
-                        # self.count_blocks += 1
+                        if self.count_blocks < 500 and (current_epoch == 20):
+                            save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
+                            save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
+                            save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
+                        self.count_blocks += 1
 
                         try:
                             output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred
