@@ -7,6 +7,8 @@ from torchvision.utils import save_image
 import wandb
 from PIL import Image
 from torch.utils.data import DataLoader
+from skimage.measure import shannon_entropy
+
 
 from DataSet import DataSet, LensletBlockedReferencer
 
@@ -69,22 +71,24 @@ class Trainer:
 
         for epoch in range(params.resume_epoch, 1 + params.epochs):
             #0 for validation off
-            loss = self.train(epoch, 0, params.wandb_active)
-            print(f"Epoch {epoch}: {loss}")
+            loss, entropy = self.train(epoch, 0, params.wandb_active)
+            print(f"Epoch {epoch}: {loss}, {entropy}")
 
             if params.wandb_active:
-                wandb.log({f"Epoch": epoch})
-                wandb.log({f"MSE_epoch": loss})
+                wandb.log({f"Epoch": epoch},commit=False)
+                wandb.log({f"MSE_epoch": loss}, commit=False)
+                wandb.log({f"Entropy_epoch": entropy}, commit=False)
 
             # if epoch == 5:#1 to signalize that the validations is On
-            loss = self.train(epoch, 1, params.wandb_active)
+            loss, entropy = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}")
 
             if self.params.lr_scheduler == 'custom':
                 scheduler.step()
 
             if params.wandb_active:
-                wandb.log({f"MSE_VAL_epoch": loss})
+                wandb.log({f"MSE_VAL_epoch": loss}, commit=False)
+                wandb.log({f"Entropy_VAL_epoch": entropy})
 
             check = {
                 'epoch': epoch + 1,
@@ -104,6 +108,7 @@ class Trainer:
     def train(self, current_epoch, val, wandb_active):
 
         acc = 0
+        acc_entropy = 0
         batches_now = 0
         if val == 0:
             self.model.train()
@@ -200,6 +205,7 @@ class Trainer:
                 # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
                 loss = self.loss(predicted, actual_block)
+                result_entropy = shannon_entropy(predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy() )
 
                 if val == 0:
                     self.optimizer.zero_grad()
@@ -208,6 +214,7 @@ class Trainer:
                 # loss = Mean over batches... so we weight the loss by the batch
                 loss = loss.cpu().item()
                 acc += loss * current_batch_size
+                acc_entropy += result_entropy * current_batch_size
                 batches_now += current_batch_size
                 # if wandb_active:
                 #     if val == 0:
@@ -217,7 +224,7 @@ class Trainer:
                 #         wandb.log({f"Batch_MSE_VAL_global_{current_epoch}": loss})
 
 
-        return acc / batches_now
+        return acc / batches_now, acc_entropy/batches_now
 
 
 class ModelOracle:

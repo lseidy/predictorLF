@@ -4,5 +4,5 @@
 #python3 Runner.py --batch-size 64 --predictor-size 16 --run-name gabriele3k_Skip_16x16 --output-path gabriele3k_Skip_16x16 --model Unet3k
 
 
-python3 Runner.py --batch-size 64 --predictor-size 16 --run-name gabriele3kNoConvTrans_noSkip_16x16 --output-path gabriele3kNoConvTrans_noSkip_16x16 --model Unet3k --no-skip
+python3 Runner.py --limit-train 20 --batch-size 64 --predictor-size 16 --run-name entropyTest --output-path entropyTest --model Unet3k --no-skip
 #python3 Runner.py --batch-size 64 --predictor-size 16 --run-name gabriele3kNoConvTrans_Skip_16x16 --output-path gabriele3kNoConvTrans_Skip_16x16 --model Unet3#k
