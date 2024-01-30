@@ -16,17 +16,49 @@ import LightField as LF
 
 from customLearningRateScaler import CustomExpLr as lrScaler
 
+from scipy.linalg import hadamard
+
+
+class CustomMSELoss(nn.Module):
+    def __init__(self):
+        super(CustomMSELoss, self).__init__()
+
+    def hadamard_transform(self, block):
+        hadamard_transform = torch.from_numpy(hadamard(block.shape[-1])).to(block.device, dtype=torch.float32)
+        return torch.matmul(hadamard_transform, block)
+
+
+    def satd_loss(self, original, pred):
+        transformed_original = self.hadamard_transform(original)
+        transformed_pred = self.hadamard_transform(pred)
+        return torch.sum(torch.abs(transformed_original - transformed_pred))
+
+
+    def forward(self, original, pred):
+        return self.satd_loss(original, pred)
+    
+
+
+
 class Trainer:
+
+   
 
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
         # TODO make loss GREAT AGAIN, nope, make it a param.
-        self.loss = nn.MSELoss()
+
         self.params = params
         self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
         self.predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
         self.best_loss = 1000.1
+        if self.params.loss == 'mse':
+            self.loss = nn.MSELoss()
+            print("Using MSE")
+        elif self.params.loss == 'satd':
+            self.loss = CustomMSELoss()
+            print("Using SATD")
 
 
         torch.manual_seed(42)
@@ -76,18 +108,18 @@ class Trainer:
 
             if params.wandb_active:
                 wandb.log({f"Epoch": epoch},commit=False)
-                wandb.log({f"MSE_epoch": loss}, commit=False)
+                wandb.log({f"Loss_epoch": loss}, commit=False)
                 wandb.log({f"Entropy_epoch": entropy}, commit=False)
 
             # if epoch == 5:#1 to signalize that the validations is On
             loss, entropy = self.train(epoch, 1, params.wandb_active)
-            print(f"Validation: {loss}")
+            print(f"Validation: {loss}, {entropy}")
 
             if self.params.lr_scheduler == 'custom':
                 scheduler.step()
 
             if params.wandb_active:
-                wandb.log({f"MSE_VAL_epoch": loss}, commit=False)
+                wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
                 wandb.log({f"Entropy_VAL_epoch": entropy})
 
             check = {
@@ -204,6 +236,7 @@ class Trainer:
                 # cpu_pred=LF.denormalize_image(cpu_pred, self.params.bit_depth)
                 # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
+                print(predicted.shape, actual_block.shape)
                 loss = self.loss(predicted, actual_block)
                 result_entropy = shannon_entropy(predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy() )
 
@@ -224,7 +257,7 @@ class Trainer:
                 #         wandb.log({f"Batch_MSE_VAL_global_{current_epoch}": loss})
 
 
-        return acc / batches_now, acc_entropy/batches_now
+        return acc/batches_now, acc_entropy/batches_now
 
 
 class ModelOracle:
