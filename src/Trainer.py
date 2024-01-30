@@ -9,7 +9,6 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
 
-
 from DataSet import DataSet, LensletBlockedReferencer
 
 import LightField as LF
@@ -236,18 +235,39 @@ class Trainer:
                 # cpu_pred=LF.denormalize_image(cpu_pred, self.params.bit_depth)
                 # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
-                print(predicted.shape, actual_block.shape)
+                #print(predicted.shape, actual_block.shape)
                 loss = self.loss(predicted, actual_block)
-                result_entropy = shannon_entropy(predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy() )
+
+                import torch.nn.functional as F
+                
+                res = predicted.cpu().detach().numpy()-actual_block.cpu().detach().numpy()
+                result_entropy=0
+                count_batchs=0
+                for batch in res:
+                    count_batchs+=1
+                    #print(count)
+                    result_entropy += shannon_entropy(batch[0,:,:])
+                result_entropy = result_entropy/count_batchs
+                #print("result final:", result_entropy)
+                #result_entropy = shannon_entropy(torch.subtract(torch.from_numpy(predicted.cpu().detach().numpy()),torch.from_numpy(actual_block.cpu().detach().numpy())))
+                #sci_entropy = entropy((predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy()), square(31))
+                #print(predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy())
+                #print(sci_entropy)
+
+
+
+
 
                 if val == 0:
                     self.optimizer.zero_grad()
                     loss.backward()
-                    self.optimizer.step()
+                    if self.params.lr_scheduler == 'lr':
+                        self.optimizer.step()
                 # loss = Mean over batches... so we weight the loss by the batch
                 loss = loss.cpu().item()
                 acc += loss * current_batch_size
-                acc_entropy += result_entropy * current_batch_size
+                acc_entropy += result_entropy * count_batchs
+                #print("acc:", acc_entropy/batches_now)
                 batches_now += current_batch_size
                 # if wandb_active:
                 #     if val == 0:
@@ -255,7 +275,7 @@ class Trainer:
                 #         wandb.log({f"Batch_MSE_global": loss})
                 #     else:
                 #         wandb.log({f"Batch_MSE_VAL_global_{current_epoch}": loss})
-
+        print("final entropy: ", acc_entropy/batches_now)
 
         return acc/batches_now, acc_entropy/batches_now
 
