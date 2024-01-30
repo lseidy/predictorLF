@@ -58,6 +58,9 @@ class Trainer:
         elif self.params.loss == 'satd':
             self.loss = CustomMSELoss()
             print("Using SATD")
+        else:
+            print("Unknown Loss Metric")
+            exit(404)
 
 
         torch.manual_seed(42)
