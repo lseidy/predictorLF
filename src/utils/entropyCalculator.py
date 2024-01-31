@@ -6,6 +6,7 @@ from skimage.filters.rank import entropy as entr
 from skimage.morphology import square
 import numpy as np
 from scipy.stats import entropy as scip 
+
 def image_to_tensor(image_path):
     image = Image.open(image_path)
     image_tensor = TF.to_tensor(image).unsqueeze(0)
@@ -17,6 +18,7 @@ def compute_residual_entropy(image1, image2):
     # Convert images to tensors
     tensor1 = image_to_tensor(image1)
     tensor2 = image_to_tensor(image2)
+    print(tensor1)
 
     # Compute residuals
     residual = torch.abs(tensor1 - tensor2)

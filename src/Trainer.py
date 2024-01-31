@@ -243,13 +243,13 @@ class Trainer:
 
                 import torch.nn.functional as F
                 
-                res = predicted.cpu().detach().numpy()-actual_block.cpu().detach().numpy()
+                res = torch.abs(predicted.squeeze().cpu().detach()-actual_block.squeeze().cpu().detach())
                 result_entropy=0
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
                     #print(count)
-                    result_entropy += shannon_entropy(batch[0,:,:])
+                    result_entropy += shannon_entropy(batch)
                 result_entropy = result_entropy/count_batchs
                 #print("result final:", result_entropy)
                 #result_entropy = shannon_entropy(torch.subtract(torch.from_numpy(predicted.cpu().detach().numpy()),torch.from_numpy(actual_block.cpu().detach().numpy())))
