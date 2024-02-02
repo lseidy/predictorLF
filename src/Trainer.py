@@ -74,6 +74,14 @@ class Trainer:
         self.model = ModelOracle(params.model).get_model(config_name, params)
 
 
+        if params.resume != '':
+                    #TODO FINISH RESUMING TRAINING
+                    try:
+                        checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
+                        self.model.load_state_dict(checkpoint)
+                    except RuntimeError:
+                        print("Failed to resume model")
+
 
         # TODO make AMERICA GREAT AGAIN, nope.... Num works be a parameter too
         # TODO test prefetch_factor and num_workers to optimize
@@ -93,12 +101,17 @@ class Trainer:
 
         self.loss = self.loss.to(device)
 
-        self.optimizer = torch.optim.Adam(
-        self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        
+        if params.lr_scheduler == 'lr':
+            self.optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
 
-        if params.lr_scheduler == 'custom':
-            scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+        elif params.lr_scheduler == 'custom':
+            self.optimizer = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
                                   decay_steps=params.epochs, decay_rate=params.lr_gamma)
+        else: 
+            print("UKNOWN Optmizer")
+            exit(401)
 
         
 
@@ -117,8 +130,8 @@ class Trainer:
             loss, entropy = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}, {entropy}")
 
-            if self.params.lr_scheduler == 'custom':
-                scheduler.step()
+            #if self.params.lr_scheduler == 'custom':
+            #    scheduler.step()
 
             if params.wandb_active:
                 wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
@@ -202,7 +215,7 @@ class Trainer:
                             print(e)
                             exit()
 
-                        if self.count_blocks < 500 and (current_epoch == 20):
+                        if self.count_blocks < 10 and (current_epoch == 1):
                             save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
                             save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
                             save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
@@ -241,22 +254,19 @@ class Trainer:
                 #print(predicted.shape, actual_block.shape)
                 loss = self.loss(predicted, actual_block)
 
-                import torch.nn.functional as F
                 
-                res = torch.abs(predicted.squeeze().cpu().detach()-actual_block.squeeze().cpu().detach())
+                #print(predicted.squeeze().shape)
+                res = (torch.abs(LF.denormalize_image(predicted.cpu().detach(),8)-LF.denormalize_image(actual_block.cpu().detach(), 8))).int()
+                #print(res.int())
                 result_entropy=0
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
-                    #print(count)
+                    #print(batch)
                     result_entropy += shannon_entropy(batch)
                 result_entropy = result_entropy/count_batchs
                 #print("result final:", result_entropy)
-                #result_entropy = shannon_entropy(torch.subtract(torch.from_numpy(predicted.cpu().detach().numpy()),torch.from_numpy(actual_block.cpu().detach().numpy())))
-                #sci_entropy = entropy((predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy()), square(31))
-                #print(predicted.cpu().detach().numpy() -actual_block.cpu().detach().numpy())
-                #print(sci_entropy)
-
+                
 
 
 
@@ -264,13 +274,11 @@ class Trainer:
                 if val == 0:
                     self.optimizer.zero_grad()
                     loss.backward()
-                    if self.params.lr_scheduler == 'lr':
-                        self.optimizer.step()
+                    self.optimizer.step()
                 # loss = Mean over batches... so we weight the loss by the batch
                 loss = loss.cpu().item()
                 acc += loss * current_batch_size
                 acc_entropy += result_entropy * count_batchs
-                #print("acc:", acc_entropy/batches_now)
                 batches_now += current_batch_size
                 # if wandb_active:
                 #     if val == 0:
@@ -278,7 +286,6 @@ class Trainer:
                 #         wandb.log({f"Batch_MSE_global": loss})
                 #     else:
                 #         wandb.log({f"Batch_MSE_VAL_global_{current_epoch}": loss})
-        print("final entropy: ", acc_entropy/batches_now)
 
         return acc/batches_now, acc_entropy/batches_now
 
@@ -300,15 +307,7 @@ class ModelOracle:
 
     def get_model(self, config_name, params):
 
-        if params.resume != '':
-            #TODO FINISH RESUMING TRAINING
-            try:
-                self.model(config_name, params)
-                self.model.load_state_dict(torch.load(params.resume))
-
-                return
-            except RuntimeError:
-                print("Failed to resume model")
+       
         try:
             return self.model(config_name, params)
 
