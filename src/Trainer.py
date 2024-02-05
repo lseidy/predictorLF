@@ -102,16 +102,16 @@ class Trainer:
         self.loss = self.loss.to(device)
 
         
-        if params.lr_scheduler == 'lr':
-            self.optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        
+        self.optimizer = torch.optim.Adam(
+        self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
 
-        elif params.lr_scheduler == 'custom':
-            self.optimizer = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+
+        if params.lr_scheduler == 'custom':
+            self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
                                   decay_steps=params.epochs, decay_rate=params.lr_gamma)
-        else: 
-            print("UKNOWN Optmizer")
-            exit(401)
+            print("Using Custom Scheduler")
+       
 
         
 
@@ -130,8 +130,8 @@ class Trainer:
             loss, entropy = self.train(epoch, 1, params.wandb_active)
             print(f"Validation: {loss}, {entropy}")
 
-            #if self.params.lr_scheduler == 'custom':
-            #    scheduler.step()
+            if self.params.lr_scheduler == 'custom':
+                self.scheduler.step()
 
             if params.wandb_active:
                 wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
@@ -274,7 +274,10 @@ class Trainer:
                 if val == 0:
                     self.optimizer.zero_grad()
                     loss.backward()
+                    
                     self.optimizer.step()
+                    
+
                 # loss = Mean over batches... so we weight the loss by the batch
                 loss = loss.cpu().item()
                 acc += loss * current_batch_size
