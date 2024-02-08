@@ -190,8 +190,9 @@ class Trainer:
                 predicted = self.model(neighborhood)
                 predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 #print(predicted)
-                actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                
 
+                #actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
@@ -274,7 +275,6 @@ class Trainer:
                 if val == 0:
                     self.optimizer.zero_grad()
                     loss.backward()
-                    
                     self.optimizer.step()
                     
 

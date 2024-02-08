@@ -106,8 +106,10 @@ class LensletBlockedReferencer(Dataset):
         # print("inner", self.shape)
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
+        
     def __len__(self):
         return self.len
+    
     def __getitem__(self, batch_size):
         if batch_size < -len(self) or batch_size >= len(self):
             raise IndexError(batch_size)
