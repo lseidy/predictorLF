@@ -6,4 +6,4 @@
 #python3 Runner.py --batch-size 64 --predictor-size 32 --run-name  MSE_Test_EntropyRGB --output-path MSE_Test_EntropyRGB --model Unet3k
 
 
-python3 Runner.py --batch-size 64 --predictor-size 32 --run-name satd_gabriele3k_32_lr_-3 --output-path satd_gabriele3k_32_lr_-3 --lr 0.004
+python3 Runner.py --batch-size 64 --predictor-size 32 --run-name satd_gabriele3k_32_lr_-3 --output-path satd_gabriele3k_32_lr_-3 --lr 0.001

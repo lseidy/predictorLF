@@ -28,9 +28,9 @@ class CustomMSELoss(nn.Module):
 
 
     def satd_loss(self, original, pred):
-        transformed_original = self.hadamard_transform(original)
-        transformed_pred = self.hadamard_transform(pred)
-        return torch.sum(torch.abs(transformed_original - transformed_pred))
+        #transformed_original = self.hadamard_transform(original)
+        #transformed_pred = self.hadamard_transform(pred)
+        return torch.sum(torch.abs(self.hadamard_transform(original - pred)))
 
 
     def forward(self, original, pred):
