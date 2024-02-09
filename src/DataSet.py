@@ -26,7 +26,9 @@ class DataSet:
         self.list_test = LazyList([], transforms = [ToTensor()], bit_depth=self.bit_depth)
         self.test_lf_names = ["Bikes", "Danger_de_Mort", "Ankylosaurus_&_Diplodocus_1", "Black_Fence", "Ceiling_Light", "Friends_1", "Houses_&_Lake", "Reeds",
                               "Rusty_Fence", "Slab_&_Lake", "Swans_2", "Vespa"]
-        #self.test_lf_names = ["Danger_de_Mort"]
+        #
+        if params.limit_val != -1:
+            self.test_lf_names = self.test_lf_names[:params.limit_val]
 
         try:
             self.load_paths()

@@ -42,7 +42,8 @@ def get_args():
     parser.add_argument("--resol_ver",      default=3456,   type=int, help="Vertical Resolution")
     parser.add_argument("--resol_hor",      default=4960,   type=int, help="Horizontal Resolution")
     parser.add_argument("--bit-depth",      default=8,      type=int, help="Bit Depth")
-    parser.add_argument("--limit-train",    default=-1,      type=int, help="Max num of LFs to train. (FOR QUICK TEST PURPOUSES ONLY)")
+    parser.add_argument("--limit-train",    default=-1,     type=int, help="Max num of LFs to train. (FOR QUICK TEST PURPOUSES ONLY)")
+    parser.add_argument("--limit-val",      default=-1,     type=int, help="Max num of LFs to val. (FOR QUICK TEST PURPOUSES ONLY)")
 
 
     parser.add_argument('--no-wandb', dest='wandb_active', action='store_false')
