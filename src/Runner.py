@@ -44,10 +44,17 @@ def main():
                 "epochs": params.epochs,
                 "batch size": params.batch_size,
                 "learning_rate": params.lr,
+                "Loss": params.loss,
+                "scheduler": params.lr_scheduler,
                 "name": config_name,
                 "Training Size": len(dataset.list_train),
                 "Test Size": len(dataset.list_test),
-                "Train list": dataset.list_train
+                "Bit-Depth": dataset.bit_depth,
+                "Model": params.model,
+                "No-skip": params.no_skip,
+                "Num-Filters": params.num_filters
+
+
             }
         )
 
