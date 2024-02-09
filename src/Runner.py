@@ -13,12 +13,12 @@ def main():
     config_name = f"{params.run_name}{params.model}_{params.batch_size}_{params.lr}"
 
     try:
-        os.mkdir(f"/home/machado/saved_LFs/{params.output_path}")
-        os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/validation/")
+        os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}")
+        os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}/validation/")
 
-        os.mkdir(f"/home/machado/saved_models/{params.output_path}")
+        os.mkdir(f"{params.std_path}/saved_models/{params.run_name}")
         if params.save_train:
-            os.mkdir(f"/home/machado/saved_LFs/{params.output_path}/train/")
+            os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}/train/")
     except FileExistsError:
         print("Using Existent folder!!")
 
@@ -28,7 +28,7 @@ def main():
     dataset = DataSet(params)
     dataset.split()
 
-
+    wandb.login(key="9a53bad34073a4b6bcfa6c2cb67a857e976d86c4" ,force=True)
 
     if params.wandb_active:
         wandb.init(

@@ -6,14 +6,18 @@ def get_args():
     # Random seed for np and tf (-1 to avoid seeding)
     parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
     # Training parametes
-    parser.add_argument('--dataset-path', type=str, default='/home/machado/Lenslet_8x8_Gscale/',
+    parser.add_argument('--dataset-path', type=str, default='/scratch/DataSets/Lenslet_8x8_Gscale/',
                         help='Direcory with training pngs')
 
-    parser.add_argument('--test-path', type=str, default='/home/machado/Lenslet_8x8_Gscale',
+    parser.add_argument('--test-path', type=str, default='/scratch/DataSets/Lenslet_8x8_Gscale',
                         help='Direcory with test pngs')
 
 
     parser.add_argument('--save-test',  dest='save_test', action='store_true', help='Save the predicted LFS on the test/validation')
+
+    parser.add_argument('--std-path', type=str, default='/scratch',
+                        help='Direcory to be root of all others (saved_lfs, saved_models, etc)')
+
 
 
     # TODO we need a separate bithdepth switch for each dataset!
@@ -52,6 +56,9 @@ def get_args():
                         help='Output dir')
     parser.add_argument('--project-name', default='delete', type=str)
     parser.add_argument('--run-name', default='', type=str)
+    #removed for redundant usage
+    #parser.add_argument('--output-path', default='test_dump', type=str, metavar='PATH',
+     #                   help='Path to save the Models and output LFs in folders saved_models and saved_LFs')
 
     #@TODO automatizar resuming simulations
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -59,8 +66,7 @@ def get_args():
     parser.add_argument('--resume-epoch', default=1, type=int, metavar='PATH',
                         help='The number of epochs the param was previously trained')
 
-    parser.add_argument('--output-path', default='test_dump', type=str, metavar='PATH',
-                        help='Path to save the Models and output LFs in folders saved_models and saved_LFs')
+    
     parser.add_argument('--save-train', dest='save_train', action='store_true')
 
 

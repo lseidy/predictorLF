@@ -146,11 +146,11 @@ class Trainer:
 
 
             if loss < self.best_loss:
-                torch.save(check, f"/home/machado/saved_models/{params.output_path}/bestMSE_{config_name}.pth.tar")
+                torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/bestMSE_{config_name}.pth.tar")
                 self.best_loss = loss
 
 
-            torch.save(check, f"/home/machado/saved_models/{params.output_path}/{config_name}_{epoch}.pth.tar")
+            torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
 
@@ -217,9 +217,9 @@ class Trainer:
                             exit()
 
                         if self.count_blocks < 10 and (current_epoch == 1):
-                            save_image(block_pred, f"/home/machado/blocks_tests/{self.count_blocks}_predicted.png")
-                            save_image(block_orig, f"/home/machado/blocks_tests/{self.count_blocks}_original.png")
-                            save_image(block_ref, f"/home/machado/blocks_tests/{self.count_blocks}_reference.png")
+                            save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
+                            save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
+                            save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
                         self.count_blocks += 1
 
                         try:
@@ -240,9 +240,9 @@ class Trainer:
                         if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
                             # print("counts save", it_j, it_i)
                             if val == 0:
-                                save_image(output_lf, f"/home/machado/saved_LFs/{self.params.output_path}/train/allBlocks_{i}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/train/allBlocks_{i}.png")
                             elif val == 1:
-                                save_image(output_lf, f"/home/machado/saved_LFs/{self.params.output_path}/validation/allBlocks_{i}_{current_epoch}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
 
                 # predicted = predicted*255
