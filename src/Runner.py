@@ -52,7 +52,9 @@ def main():
                 "Bit-Depth": dataset.bit_depth,
                 "Model": params.model,
                 "No-skip": params.skip,
-                "Num-Filters": params.num_filters
+                "Num-Filters": params.num_filters,
+                "Context Size": params.context_size,
+                "Predictor Size": params.predictor_size
 
 
             }
