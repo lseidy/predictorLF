@@ -51,7 +51,7 @@ def main():
                 "Test Size": len(dataset.list_test),
                 "Bit-Depth": dataset.bit_depth,
                 "Model": params.model,
-                "No-skip": params.no_skip,
+                "No-skip": params.skip,
                 "Num-Filters": params.num_filters
 
 

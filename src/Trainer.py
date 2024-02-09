@@ -18,9 +18,9 @@ from customLearningRateScaler import CustomExpLr as lrScaler
 from scipy.linalg import hadamard
 
 
-class CustomMSELoss(nn.Module):
+class CustomSATDLoss(nn.Module):
     def __init__(self):
-        super(CustomMSELoss, self).__init__()
+        super(CustomSATDLoss, self).__init__()
 
     def hadamard_transform(self, block):
         hadamard_transform = torch.from_numpy(hadamard(block.shape[-1])).to(block.device, dtype=torch.float32)
@@ -56,7 +56,7 @@ class Trainer:
             self.loss = nn.MSELoss()
             print("Using MSE")
         elif self.params.loss == 'satd':
-            self.loss = CustomMSELoss()
+            self.loss = CustomSATDLoss()
             print("Using SATD")
         else:
             print("Unknown Loss Metric")

@@ -14,14 +14,14 @@ class UNetSpace(nn.Module):
         # s, t, u, v = (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size)
         n_filters = params.num_filters
         print("n_filters: ", n_filters)
-        print("kernels 3 no_skip ", params.no_skip)
+        #print("kernels 3 no_skip ", params.no_skip)
 
-        if params.no_skip:
+        if not params.skip:
             type_mode = RegModel
             mul_fact = 1
             print("kernels 3 no-skip")
 
-        else:
+        elif params.skip:
             type_mode = UNetLike
             mul_fact = 2
             print("kernels 3 skip")

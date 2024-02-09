@@ -72,7 +72,7 @@ def get_args():
 
     parser.add_argument('--model', default='Unet3k', type=str)
     parser.add_argument('--num-filters', default=32, type=int)
-    parser.add_argument('--skip', dest='no_skip', action='store_false')
+    parser.add_argument('--skip', dest='skip', action='store_true')
 
 
 
