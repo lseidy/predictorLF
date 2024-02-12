@@ -52,6 +52,7 @@ class Trainer:
         self.predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
         self.best_loss = 1000.1
+        self.entryopy = 1000.1
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
@@ -70,17 +71,7 @@ class Trainer:
         # TODO REMOVE
         self.count_blocks = 0
 
-        # TODO after everything else is done, adapt for other models
-        self.model = ModelOracle(params.model).get_model(config_name, params)
 
-
-        if params.resume != '':
-                    #TODO FINISH RESUMING TRAINING
-                    try:
-                        checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
-                        self.model.load_state_dict(checkpoint)
-                    except RuntimeError:
-                        print("Failed to resume model")
 
 
         # TODO make AMERICA GREAT AGAIN, nope.... Num works be a parameter too
@@ -91,6 +82,20 @@ class Trainer:
                                   pin_memory=True)
         self.test_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
                                    pin_memory=True)
+
+
+        # TODO after everything else is done, adapt for other models
+        self.model = ModelOracle(params.model).get_model(config_name, params)
+
+
+        if params.resume != '':
+                    #TODO FINISH RESUMING TRAINING
+                    try:
+                        checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
+                        self.model.load_state_dict(checkpoint["state_dict"])
+                    except RuntimeError as e:
+                        print("Failed to resume model", e)
+
 
         if torch.cuda.is_available():
             self.model.cuda()
@@ -105,6 +110,13 @@ class Trainer:
         
         self.optimizer = torch.optim.Adam(
         self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+
+        if params.resume != '':
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            self.optimizer.param_groups[0]['capturable'] = True
+
+        if params.wandb_active:
+            wandb.watch(self.model)
 
 
         if params.lr_scheduler == 'custom':
@@ -148,6 +160,9 @@ class Trainer:
             if loss < self.best_loss:
                 torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/bestMSE_{config_name}.pth.tar")
                 self.best_loss = loss
+            if entropy < self.best_entropy:
+                torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/bestEntropy_{config_name}.pth.tar")
+                self.best_entropy = entropy
 
 
             torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/{config_name}_{epoch}.pth.tar")

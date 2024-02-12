@@ -55,7 +55,7 @@ def get_args():
     parser.add_argument('--save', default='../runs/exp', type=str,
                         help='Output dir')
     parser.add_argument('--project-name', default='delete', type=str)
-    parser.add_argument('--run-name', default='', type=str)
+    parser.add_argument('--run-name', default='test_dump', type=str)
     #removed for redundant usage
     #parser.add_argument('--output-path', default='test_dump', type=str, metavar='PATH',
      #                   help='Path to save the Models and output LFs in folders saved_models and saved_LFs')

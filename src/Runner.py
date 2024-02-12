@@ -10,7 +10,7 @@ import os
 def main():
     params = get_args()
 
-    config_name = f"{params.run_name}{params.model}_{params.batch_size}_{params.lr}"
+    config_name = f"{params.run_name}_{params.model}_{params.loss}_{params.predictor_size}_{params.batch_size}_{params.lr}"
 
     try:
         os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}")
@@ -28,9 +28,11 @@ def main():
     dataset = DataSet(params)
     dataset.split()
 
-    wandb.login(key="9a53bad34073a4b6bcfa6c2cb67a857e976d86c4" ,force=True)
-
+    
     if params.wandb_active:
+
+        wandb.login(key="9a53bad34073a4b6bcfa6c2cb67a857e976d86c4" ,force=True)
+
         wandb.init(
             # set the wandb project where this run will be logged
             project="predictorUnet",
@@ -51,7 +53,7 @@ def main():
                 "Test Size": len(dataset.list_test),
                 "Bit-Depth": dataset.bit_depth,
                 "Model": params.model,
-                "No-skip": params.skip,
+                "Skip Connections": params.skip,
                 "Num-Filters": params.num_filters,
                 "Context Size": params.context_size,
                 "Predictor Size": params.predictor_size
