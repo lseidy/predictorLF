@@ -8,7 +8,7 @@ import wandb
 from PIL import Image
 from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
-
+from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
 
 import LightField as LF
@@ -64,9 +64,15 @@ class Trainer:
             print("Unknown Loss Metric")
             exit(404)
 
-
+        print(summary(self.model))
+        print(summary(self.model), file=f"{self.params.std_path}/saved_models/{params.run_name}")
+        
         torch.manual_seed(42)
         torch.cuda.manual_seed(42)
+        torch.cuda.manual_seed_all(42)  # If using multiple GPUs
+
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
         # TODO REMOVE
