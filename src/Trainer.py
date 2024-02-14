@@ -51,8 +51,9 @@ class Trainer:
         self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
         self.predictor_size_h = self.params.num_views_hor * self.params.predictor_size
         self.dataset = dataset
-        self.best_loss = 1000.1
-        self.entryopy = 1000.1
+        self.best_loss = 100000.1
+        self.best_entropy = 1000.1
+
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")

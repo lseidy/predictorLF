@@ -40,4 +40,4 @@ RUN chown -R :1337 /src
 
 WORKDIR /src
 
-ENTRYPOINT [ "sh"]
+ENTRYPOINT ["sh"]

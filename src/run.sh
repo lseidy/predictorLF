@@ -6,7 +6,7 @@
 #python3 Runner.py --batch-size 64 --predictor-size 32 --run-name  MSE_Test_EntropyRGB --output-path MSE_Test_EntropyRGB --model Unet3k
 
 
-python3 Runner.py --batch-size 64 --predictor-size 8 --run-name satdFix_gabriele3k_8x8_lr-5_resume --loss satd --lr 0.00001 --resume-epoch 100 --epochs 200 --resume /scratch/saved_models/satdFix_gabriele3k_8x8_lr-5/satdFix_gabriele3k_8x8_lr-5_Unet3k_64_1e-05_100.pth.tar
+python3 Runner.py --batch-size 64 --predictor-size 8 --run-name satdLong --loss satd --lr 0.00001 --epochs 200
 
 
 #QUICK DEBUG RUN
