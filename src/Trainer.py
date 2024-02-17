@@ -218,7 +218,10 @@ class Trainer:
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
                 predicted = self.model(neighborhood)
-                predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                
+                if self.params.loss_mode == "predOnly":
+                    predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                
                 #print(predicted)
                 
 

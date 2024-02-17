@@ -103,6 +103,7 @@ class LensletBlockedReferencer(Dataset):
         self.predictor_size = predictor_size * MI_size
         self.context_size= context_size * MI_size
         self.inner_shape = original.shape
+        self.loss_mode = loss_mode
         assert(self.decoded.shape == self.original.shape)
         self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
         # print("inner", self.shape)
@@ -136,8 +137,10 @@ class LensletBlockedReferencer(Dataset):
 
 
         neighborhood[:, :, :] = section.to(neighborhood)
-        expected_block = neighborhood[:, -self.predictor_size:, -self.predictor_size:].clone() #.to(neighborhood)
-
+        if self.loss_mode == "predOnly":
+            expected_block = neighborhood[:, -self.predictor_size:, -self.predictor_size:].clone() #.to(neighborhood)
+        elif self.loss_mode == "fullContext":
+            expected_block = neighborhood[:, :, :].clone()
         
         avgtop = neighborhood[:, :self.predictor_size, :].mean()
         avgleft = neighborhood[:, -self.predictor_size:, :self.predictor_size].mean()

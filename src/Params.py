@@ -30,7 +30,9 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
-    parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [abs|mse|ssim]')
+    parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [mse|satd]')
+    parser.add_argument('--loss_mode', type=str, default='predOnly', help='Defines context for loss [predOnly|fullContext]')
+
     parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
     parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
