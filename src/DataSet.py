@@ -95,7 +95,7 @@ class LazyList(Dataset):
 
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
-    def __init__(self, original, MI_size, predictor_size=32, context_size=64):
+    def __init__(self, original, MI_size, predictor_size=32, context_size=64, loss_mode="predOnly"):
         super().__init__()
         self.count=0
         self.decoded = original[0, :1, :, :]

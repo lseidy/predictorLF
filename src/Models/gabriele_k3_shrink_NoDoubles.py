@@ -3,8 +3,8 @@ from argparse import Namespace
 
 import torch
 import torch.nn as nn
-from unetModelGabriele import UNetLike
-from ModelGabriele import RegModel
+from Models.unetModelGabriele import UNetLike
+from Models.ModelGabriele import RegModel
 from torch.nn import Conv2d, ConvTranspose2d
 
 
@@ -41,13 +41,13 @@ class UNetSpace(nn.Module):
                 
             ),
             nn.Sequential(
-                Conv2d((n_filters*4), (n_filters*8), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²  
+                Conv2d((n_filters*4), 512, 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²  
             )
 
         ], [
             nn.Sequential(  # 10, 4
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
-                nn.Conv2d(n_filters*8, n_filters*4, kernel_size=3, stride=1, padding=1), nn.PReLU()
+                nn.Conv2d(512, n_filters*4, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
             nn.Sequential(  # 10, 8
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8

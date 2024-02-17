@@ -64,8 +64,6 @@ class Trainer:
             print("Unknown Loss Metric")
             exit(404)
 
-        print(summary(self.model))
-        print(summary(self.model), file=f"{self.params.std_path}/saved_models/{params.run_name}")
         
         torch.manual_seed(42)
         torch.cuda.manual_seed(42)
@@ -95,6 +93,7 @@ class Trainer:
         self.model = ModelOracle(params.model).get_model(config_name, params)
 
 
+
         if params.resume != '':
                     #TODO FINISH RESUMING TRAINING
                     try:
@@ -110,8 +109,16 @@ class Trainer:
         else:
             print("Running on CPU!")
             device = torch.device("cpu")
+        
+        self.model.eval()
+        print(summary(self.model, (1, 64, 64)))
+        #TODO fix not printing to file
+        #with open(f"{self.params.std_path}/saved_models/{config_name}/networksummary_{config_name}.txt", "w+") as out:
+        #    print(summary(self.model, (1, 64, 64)), file=out)
+        
 
         self.loss = self.loss.to(device)
+
 
         
         
@@ -164,15 +171,16 @@ class Trainer:
 
 
 
-            if loss < self.best_loss:
-                torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/bestMSE_{config_name}.pth.tar")
-                self.best_loss = loss
-            if entropy < self.best_entropy:
-                torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/bestEntropy_{config_name}.pth.tar")
-                self.best_entropy = entropy
+            if params.run_name != "test_dump":
+                if loss < self.best_loss:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestMSE_{config_name}.pth.tar")
+                    self.best_loss = loss
+                if entropy < self.best_entropy:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
+                    self.best_entropy = entropy
 
 
-            torch.save(check, f"{self.params.std_path}/saved_models/{params.run_name}/{config_name}_{epoch}.pth.tar")
+            torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
 
@@ -322,6 +330,14 @@ class ModelOracle:
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("gabri_like")
             self.model = UNetSpace
+        elif model_name == 'LastLayer':
+            from Models.gabriele_k3_shrink_lastlayer import UNetSpace
+            self.model = UNetSpace
+            print("LastLayer")
+        elif model_name == 'NoDoubles':
+            from Models.gabriele_k3_shrink_NoDoubles import UNetSpace
+            self.model = UNetSpace
+            print("NoDoubles")            
         elif model_name == 'Unet4k':
             from Models.gabriele_k4 import UNetSpace
             self.model = UNetSpace

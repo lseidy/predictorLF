@@ -6,8 +6,9 @@
 #python3 Runner.py --batch-size 64 --predictor-size 32 --run-name  MSE_Test_EntropyRGB --output-path MSE_Test_EntropyRGB --model Unet3k
 
 
-python3 Runner.py --batch-size 64 --predictor-size 8 --run-name satdLong --loss satd --lr 0.00001 --epochs 200
-
+#python3 Runner.py --batch-size 64 --predictor-size 32 --run-name lastLayer --loss satd --model LastLayer
+#python3 Runner.py --batch-size 64 --predictor-size 32 --run-name noDoubles --loss satd --model NoDoubles
+python3 Runner.py --batch-size 64 --predictor-size 32 --run-name BootleneckNoDoubles16ch --loss satd --model NoDoubles --num-filters 16
 
 #QUICK DEBUG RUN
-#python3 Runner.py --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandb
+#python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandb

@@ -19,7 +19,7 @@ RUN pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_co
 RUN pip install albumentations
 RUN pip install Pillow
 RUN pip install einops
-
+RUN pip install torchsummary
 #RUN addgroup --gid 1337 eidoslab
 
 # This is wandb stuff
