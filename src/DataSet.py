@@ -95,7 +95,8 @@ class LazyList(Dataset):
 
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
-    def __init__(self, original, MI_size, predictor_size=32, context_size=64, loss_mode="predOnly"):
+    def __init__(self, original, MI_size, predictor_size=32, context_size=64, 
+                 loss_mode="predOnly", context_mode='black'):
         super().__init__()
         self.count=0
         self.decoded = original[0, :1, :, :]
@@ -104,6 +105,7 @@ class LensletBlockedReferencer(Dataset):
         self.context_size= context_size * MI_size
         self.inner_shape = original.shape
         self.loss_mode = loss_mode
+        self.context_mode = context_mode
         assert(self.decoded.shape == self.original.shape)
         self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
         # print("inner", self.shape)
@@ -141,16 +143,18 @@ class LensletBlockedReferencer(Dataset):
             expected_block = neighborhood[:, -self.predictor_size:, -self.predictor_size:].clone() #.to(neighborhood)
         elif self.loss_mode == "fullContext":
             expected_block = neighborhood[:, :, :].clone()
+            #print(expected_block.shape)
         
-        avgtop = neighborhood[:, :self.predictor_size, :].mean()
-        avgleft = neighborhood[:, -self.predictor_size:, :self.predictor_size].mean()
-        # neighborhood[:, self.predictor_size:, self.predictor_size:] = neighborhood[:, :self.predictor_size, :self.predictor_size].flip((-1, -2))
+        if self.context_mode == 'avg':
+            avgtop = neighborhood[:, :self.predictor_size, :].mean()
+            avgleft = neighborhood[:, -self.predictor_size:, :self.predictor_size].mean()
+            neighborhood[:, -self.predictor_size:, -self.predictor_size:] = (avgleft+avgtop)/2
+        else:
+            neighborhood[:, -self.predictor_size:, -self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
 
-        neighborhood[:, -self.predictor_size:, -self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
 
 
-
-        #print(expected_block)
+        #print(expected_block.shape)
 
        
         return neighborhood, expected_block

@@ -210,19 +210,21 @@ class Trainer:
 
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
-                                                  predictor_size=self.params.predictor_size,context_size=self.params.context_size)
+                                                  predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
+                                                  loss_mode=self.params.loss_mode, context_mode=self.params.context_mode)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
                 current_batch_size = actual_block.shape[0]
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
+                
                 predicted = self.model(neighborhood)
                 
                 if self.params.loss_mode == "predOnly":
                     predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 
-                #print(predicted)
+                
                 
 
                 #actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
@@ -256,7 +258,7 @@ class Trainer:
                         self.count_blocks += 1
 
                         try:
-                            output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred
+                            output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred[:, -self.predictor_size_v:, -self.predictor_size_h:]
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
                             print(e)
@@ -286,6 +288,7 @@ class Trainer:
                 # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
                 #print(predicted.shape, actual_block.shape)
+                
                 loss = self.loss(predicted, actual_block)
 
                 

@@ -11,4 +11,7 @@
 python3 Runner.py --batch-size 64 --predictor-size 32 --run-name BootleneckNoDoubles16ch --loss satd --model NoDoubles --num-filters 16
 
 #QUICK DEBUG RUN
-#python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandb
+#python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandbù
+
+#QUICK DEBUG RUN PC
+#python3 Runner.py --no-wandb --limit-train 1 --limit-val 1 --loss-mod fullContext --std-path /home/machado --dataset-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB --test-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB

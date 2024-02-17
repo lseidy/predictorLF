@@ -31,7 +31,8 @@ def get_args():
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
     parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [mse|satd]')
-    parser.add_argument('--loss_mode', type=str, default='predOnly', help='Defines context for loss [predOnly|fullContext]')
+    parser.add_argument('--loss-mode', type=str, default='predOnly', help='Defines context for loss [predOnly|fullContext]')
+    parser.add_argument('--context-mode', type=str, default='black', help='Defines context for prediction [black|average]')
 
     parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
     parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
