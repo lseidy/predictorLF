@@ -111,7 +111,10 @@ class Trainer:
             device = torch.device("cpu")
         
         self.model.eval()
-        print(summary(self.model, (1, 64, 64)))
+        if self.model_name == 'sepBlocks':
+            print(summary(self.model, (3, 32, 32)))
+        else:
+            print(summary(self.model, (1, 64, 64)))
         #TODO fix not printing to file
         #with open(f"{self.params.std_path}/saved_models/{config_name}/networksummary_{config_name}.txt", "w+") as out:
         #    print(summary(self.model, (1, 64, 64)), file=out)
@@ -211,14 +214,17 @@ class Trainer:
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
-                                                  loss_mode=self.params.loss_mode)
+                                                  loss_mode=self.params.loss_mode, model= self.model_name)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
                 current_batch_size = actual_block.shape[0]
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
-                
+            
+
+
+               
                 predicted = self.model(neighborhood)
                 
                 if self.params.loss_mode == "predOnly":
@@ -348,6 +354,10 @@ class ModelOracle:
             from Models.gabriele_k4 import UNetSpace
             self.model = UNetSpace
             print("keras_like")
+        elif model_name == 'sepBlocks':
+            from Models.gabriele_k3_shrink_NoDoubles_sepBlocks import UNetSpace
+            self.model = UNetSpace
+            print("Sep Blocks")
         else:
             print("Model not Found.")
             exit(404)

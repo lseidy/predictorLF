@@ -96,7 +96,7 @@ class LazyList(Dataset):
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
     def __init__(self, original, MI_size, predictor_size=32, context_size=64, 
-                 loss_mode="predOnly"):
+                 loss_mode="predOnly", model="gabriele"):
         super().__init__()
         self.count=0
         self.decoded = original[0, :1, :, :]
@@ -105,6 +105,7 @@ class LensletBlockedReferencer(Dataset):
         self.context_size= context_size * MI_size
         self.inner_shape = original.shape
         self.loss_mode = loss_mode
+        self.model = model
         assert(self.decoded.shape == self.original.shape)
         self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
         # print("inner", self.shape)
@@ -157,6 +158,24 @@ class LensletBlockedReferencer(Dataset):
 
 
         #print(expected_block.shape)
+
+        if self.model == "sepBlocks":
+            block1 = neighborhood[:,:32, :32]
+            block2 = neighborhood[:,:32, 32:self.context_size]
+            block3 = neighborhood[:,32:self.context_size, :32]
+            #print(neighborhood.shape)
+            #print(block1.shape)
+            #print(block2.shape)
+            #print(block3.shape)
+            inputBLock = torch.zeros(3,32,32)
+            inputBLock[0] = neighborhood[:, :32, :32]
+            inputBLock[1] = neighborhood[:, :32, 32:self.context_size]
+            inputBLock[2] = neighborhood[:, 32:self.context_size, :32]
+
+            #print(inputBLock.shape)
+            return inputBLock, expected_block
+           
+
 
        
         return neighborhood, expected_block
