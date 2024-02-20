@@ -8,8 +8,9 @@
 
 #python3 Runner.py --batch-size 64 --predictor-size 32 --run-name lastLayer --loss satd --model LastLayer
 #python3 Runner.py --batch-size 64 --predictor-size 32 --run-name noDoubles --loss satd --model NoDoubles
-python3 Runner.py --batch-size 64 --predictor-size 32 --run-name BootleneckNoDoubles16ch --loss satd --model NoDoubles --num-filters 16
-
+#python3 Runner.py --batch-size 64 --predictor-size 32 --run-name BootleneckNoDoubles16ch --loss satd --model NoDoubles --num-filters 16
+#python3 Runner.py --loss-mode fullContext --loss satd --run-name fullContextLoss
+python3 Runner.py --context-mode avg --loss satd --run-name avg
 #QUICK DEBUG RUN
 #python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandbù
 
