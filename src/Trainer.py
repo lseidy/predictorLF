@@ -211,7 +211,7 @@ class Trainer:
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
-                                                  loss_mode=self.params.loss_mode, context_mode=self.params.context_mode)
+                                                  loss_mode=self.params.loss_mode)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
