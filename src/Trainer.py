@@ -113,6 +113,8 @@ class Trainer:
         self.model.eval()
         if self.model_name == 'sepBlocks':
             print(summary(self.model, (3, 32, 32)))
+        if self.model_name == 'siamese':
+            print(summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)]))
         else:
             print(summary(self.model, (1, 64, 64)))
         #TODO fix not printing to file
@@ -182,7 +184,7 @@ class Trainer:
                     torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
                     self.best_entropy = entropy
 
-
+            
             torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
@@ -224,8 +226,18 @@ class Trainer:
             
 
 
-               
-                predicted = self.model(neighborhood)
+                if self.params.model != "siamese":
+                    predicted = self.model(neighborhood)
+                else:
+                    #print("shape: ", neighborhood.shape)
+                    input1= neighborhood[:,:1,:,:].clone()
+                    input2= neighborhood[:,1:2,:,:].clone()
+                    input3= neighborhood[:,2:3,:,:].clone()
+                    #print(input1.shape)
+                    #print(input2.shape)
+                    #print(input3.shape)
+
+                    predicted = self.model(input1, input2, input3)
                 
                 if self.params.loss_mode == "predOnly":
                     predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
@@ -337,6 +349,7 @@ class Trainer:
 
 class ModelOracle:
     def __init__(self, model_name):
+        self.model_name = model_name
         if model_name == 'Unet3k':
             from Models.gabriele_k3 import UNetSpace
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
@@ -358,6 +371,10 @@ class ModelOracle:
             from Models.gabriele_k3_shrink_NoDoubles_sepBlocks import UNetSpace
             self.model = UNetSpace
             print("Sep Blocks")
+        elif model_name == 'siamese':
+            from Models.siamese import SiameseNetwork
+            self.model = SiameseNetwork
+            print("Siamese")
         else:
             print("Model not Found.")
             exit(404)
@@ -366,6 +383,8 @@ class ModelOracle:
 
        
         try:
+            if self.model_name == "siamese":
+                return self.model(params)
             return self.model(config_name, params)
 
         except RuntimeError as e:

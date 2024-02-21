@@ -10,17 +10,17 @@ import os
 def main():
     params = get_args()
 
-    config_name = f"{params.run_name}_{params.model}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
-
+    if params.run_name != 'test_dump':  
+        config_name = f"{params.run_name}_{params.model}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
+    else:
+        config_name = 'test_dump'
+   
     try:
-        if params.run_name != 'test_dump':
-            os.mkdir(f"{params.std_path}/saved_LFs/{config_name}")
-            os.mkdir(f"{params.std_path}/saved_LFs/{config_name}/validation/")
-            os.mkdir(f"{params.std_path}/saved_models/{config_name}")
-        else:
-            os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}")
-            os.mkdir(f"{params.std_path}/saved_LFs/{params.run_name}/validation/")
-            os.mkdir(f"{params.std_path}/saved_models/{params.run_name}")
+    
+        os.mkdir(f"{params.std_path}/saved_LFs/{config_name}")
+        os.mkdir(f"{params.std_path}/saved_LFs/{config_name}/validation/")
+        os.mkdir(f"{params.std_path}/saved_models/{config_name}")
+
             
         if params.save_train:
             os.mkdir(f"{params.std_path}/saved_LFs/{config_name}/train/")

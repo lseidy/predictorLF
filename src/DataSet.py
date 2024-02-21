@@ -159,14 +159,8 @@ class LensletBlockedReferencer(Dataset):
 
         #print(expected_block.shape)
 
-        if self.model == "sepBlocks":
-            block1 = neighborhood[:,:32, :32]
-            block2 = neighborhood[:,:32, 32:self.context_size]
-            block3 = neighborhood[:,32:self.context_size, :32]
-            #print(neighborhood.shape)
-            #print(block1.shape)
-            #print(block2.shape)
-            #print(block3.shape)
+        if self.model == "sepBlocks" or self.model == "siamese":
+
             inputBLock = torch.zeros(3,32,32)
             inputBLock[0] = neighborhood[:, :32, :32]
             inputBLock[1] = neighborhood[:, :32, 32:self.context_size]
@@ -174,8 +168,12 @@ class LensletBlockedReferencer(Dataset):
 
             #print(inputBLock.shape)
             return inputBLock, expected_block
-           
-
+        
+        #elif self.model == "siamese":
+        #    inputBLock1 = neighborhood[:, :32, :32]
+        #    inputBLock2 = neighborhood[:, :32, 32:self.context_size]
+        #    inputBLock3 = neighborhood[:, 32:self.context_size, :32]
+        #    return inputBLock1, inputBLock2, inputBLock3, expected_block
 
        
         return neighborhood, expected_block
