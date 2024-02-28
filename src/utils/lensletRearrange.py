@@ -87,8 +87,8 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
     # grayscale_image = reconstructed_image.convert("L")
     reconstructed_image.save(os.path.join(path_gscale, lf_name))
 
-# path='/home/idm/bikes_lens_predicted2.png'
-# pathOut='/home/machado/Lenslet_8x8_RGB/'
+path="/home/machado/gianLucaDataset/chessboard_lightfield_syn_v1/test_finale/images/all_8x8.png"
+pathOut="/home/machado/gianLucaDataset/chessboard_lightfield_syn_v1/test_finale/images/"
 # pathOutg='/home/machado/Lenslet_8x8_Gscale/'
 #
 #
@@ -103,5 +103,5 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
 #     inner_path_g = os.path.join(pathOutg, classe)
 #     for lf in os.listdir(os.path.join(path, classe)):
 #         lf_path = os.path.join(path, classe, lf)
-#         img = (Image.open(lf_path))
-#         multiview2lenslet(img, inner_path_rgb, inner_path_g, lf)
+img = (Image.open(path))
+multiview2lenslet(img, pathOut, pathOut, "all_lesnlet_8x8.png")

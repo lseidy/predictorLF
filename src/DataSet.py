@@ -6,9 +6,11 @@ from typing import List
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
+import torchvision.transforms as T
+import albumentations as A
 
 from LightField import LightField
-
+import numpy as np
 
 # from multipledispatch import dispatch
 
@@ -96,7 +98,7 @@ class LazyList(Dataset):
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
     def __init__(self, original, MI_size, predictor_size=32, context_size=64, 
-                 loss_mode="predOnly", model="gabriele"):
+                 loss_mode="predOnly", model="gabriele", doTransforms= "none"):
         super().__init__()
         self.count=0
         self.decoded = original[0, :1, :, :]
@@ -111,6 +113,25 @@ class LensletBlockedReferencer(Dataset):
         # print("inner", self.shape)
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
+        self.doTransforms = doTransforms
+
+        if self.doTransforms != "none":
+            if  self.doTransforms == "3": 
+                self.transform = A.Compose(
+                [
+                    A.Rotate(limit=(-90,-90), p=0.5),
+                    A.HorizontalFlip(p=0.5),
+                    A.VerticalFlip(p=0.5)
+                ])
+                #print("Using rotation/flips transform")
+            elif self.doTransforms == "2":
+                self.transform = A.Compose(
+                [
+                    A.HorizontalFlip(p=0.5),
+                    A.VerticalFlip(p=0.5)
+                ])
+                #print("Using ONLY flips transform")
+
         
     def __len__(self):
         return self.len
@@ -127,6 +148,10 @@ class LensletBlockedReferencer(Dataset):
         stepI = i * self.predictor_size
         stepJ = j * self.predictor_size
         section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
+        
+        if(self.doTransforms != "none"):
+            section = self.transform(image=np.asarray(section, dtype=np.float32))['image']
+            section = torch.from_numpy(section.copy())
 
         # print("section ", section.shape)
         """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)

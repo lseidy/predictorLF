@@ -11,6 +11,7 @@ from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
 
+
 import LightField as LF
             
 
@@ -80,14 +81,15 @@ class Trainer:
 
 
 
-        # TODO make AMERICA GREAT AGAIN, nope.... Num works be a parameter too
-        # TODO test prefetch_factor and num_workers to optimize
+
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
                                     pin_memory=True, prefetch_factor=2)
         self.val_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
                                   pin_memory=True)
         self.test_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
                                    pin_memory=True)
+        
+        
 
 
         # TODO after everything else is done, adapt for other models
@@ -217,7 +219,8 @@ class Trainer:
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
-                                                  loss_mode=self.params.loss_mode, model= self.model_name)
+                                                  loss_mode=self.params.loss_mode, model= self.model_name, 
+                                                  doTransforms = self.params.transforms)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
