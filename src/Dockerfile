@@ -20,6 +20,7 @@ RUN pip install albumentations
 RUN pip install Pillow
 RUN pip install einops
 RUN pip install torchsummary
+RUN pip install pytorch_ssim
 #RUN addgroup --gid 1337 eidoslab
 
 # This is wandb stuff

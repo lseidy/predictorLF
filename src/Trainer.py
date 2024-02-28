@@ -13,10 +13,19 @@ from DataSet import DataSet, LensletBlockedReferencer
 
 import LightField as LF
 
+import pytorch_ssim
+            
+
 from customLearningRateScaler import CustomExpLr as lrScaler
 
 from scipy.linalg import hadamard
 
+
+class CustomSSIMLoss(nn.Module):
+    def __init__(self):
+        super(CustomSSIMLoss, self).__init__()
+    def forward(self, original, pred):
+        return pytorch_ssim.SSIM(original, pred)
 
 class CustomSATDLoss(nn.Module):
     def __init__(self):
@@ -57,6 +66,9 @@ class Trainer:
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
+        if self.params.loss == 'ssim':
+            self.loss = CustomSSIMLoss()
+            print("Using SSIM")
         elif self.params.loss == 'satd':
             self.loss = CustomSATDLoss()
             print("Using SATD")
