@@ -19,19 +19,9 @@ class RegModel(nn.Module):
 
     def forward(self, in1):
         for i,enc in enumerate(self.encoder):
-            #print(f'enc {i}: {in1.shape}')
             in1 = enc(in1)
-            #print(f'output {in1.shape}\n')
-        # print('-----')
-        # print("enc2", X.shape)
-            #out = torch.cat((in1, in2, in3), dim=1)
 
         for i, (dec) in enumerate(self.decoder):
-            #print(f'dec {i}: {in1.shape}')
             in1 = dec(in1)
-            #print(f'output {in1.shape}\n')
-        # print(X)
 
-        #     print("shape", s)
-        # X = self.decoder[-1](X)
         return in1
