@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
-
+import sys
 
 import LightField as LF
             
@@ -114,15 +114,24 @@ class Trainer:
             device = torch.device("cpu")
         
         self.model.eval()
-        if self.model_name == 'sepBlocks':
-            print(summary(self.model, (3, 32, 32)))
-        if self.model_name == 'siamese':
-            print(summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)]))
-        else:
-            print(summary(self.model, (1, 64, 64)))
-        #TODO fix not printing to file
-        #with open(f"{self.params.std_path}/saved_models/{config_name}/networksummary_{config_name}.txt", "w+") as out:
-        #    print(summary(self.model, (1, 64, 64)), file=out)
+        with open(f"{self.params.std_path}/saved_models/{config_name}/networksummary_{config_name}.txt", "w+") as out:
+
+            if self.model_name == 'sepBlocks' or self.model_name == 'zhong':
+                summary(self.model, (3, 32, 32))
+                sys.stdout = out
+                summary(self.model, (3, 32, 32))
+                sys.stdout = sys.__stdout__
+            elif self.model_name == 'siamese':
+                summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)])
+                sys.stdout = out
+                summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)])
+                sys.stdout = sys.__stdout__
+            else:
+                summary(self.model, (1, 64, 64))
+                sys.stdout = out
+                summary(self.model, (1, 64, 64))
+                sys.stdout = sys.__stdout__
+            
         
 
         self.loss = self.loss.to(device)
@@ -229,8 +238,8 @@ class Trainer:
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
             
 
-
                 if self.params.model != "siamese":
+                    
                     predicted = self.model(neighborhood)
                 else:
                     #print("shape: ", neighborhood.shape)
@@ -302,32 +311,19 @@ class Trainer:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
 
-                # predicted = predicted*255
-                # actual_block = actual_block*255
 
-                # loss = self.loss(predicted, actual_block)
-                # cpu_pred=LF.denormalize_image(cpu_pred, self.params.bit_depth)
-                # cpu_orig=LF.denormalize_image(cpu_orig, self.params.bit_depth)
 
-                #print(predicted.shape, actual_block.shape)
-                
+
                 loss = self.loss(predicted, actual_block)
 
-                
-                #print(predicted.squeeze().shape)
+
                 res = (torch.abs(LF.denormalize_image(predicted.cpu().detach(),8)-LF.denormalize_image(actual_block.cpu().detach(), 8))).int()
-                #print(res.int())
                 result_entropy=0
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
-                    #print(batch)
                     result_entropy += shannon_entropy(batch)
                 result_entropy = result_entropy/count_batchs
-                #print("result final:", result_entropy)
-                
-
-
 
 
                 if val == 0:
@@ -379,6 +375,10 @@ class ModelOracle:
             from Models.siamese import SiameseNetwork
             self.model = SiameseNetwork
             print("Siamese")
+        elif model_name == 'zhong':
+            from Models.zhong2019 import zhongModel
+            self.model = zhongModel
+            print("zhongModel")
         else:
             print("Model not Found.")
             exit(404)
@@ -387,9 +387,10 @@ class ModelOracle:
 
        
         try:
-            if self.model_name == "siamese":
+            if self.model_name == "siamese" or self.model_name == "zhong":
                 return self.model(params)
-            return self.model(config_name, params)
+            else:
+                return self.model(config_name, params)
 
         except RuntimeError as e:
             print("Failed to import model: ", e)

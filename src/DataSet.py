@@ -182,9 +182,8 @@ class LensletBlockedReferencer(Dataset):
         #else: print("ERROR CONTEXT MODE NOT FOUND")
 
 
-        #print(expected_block.shape)
 
-        if self.model == "sepBlocks" or self.model == "siamese":
+        if self.model == "sepBlocks" or self.model == "siamese" or self.model == "zhong":
 
             inputBLock = torch.zeros(3,32,32)
             inputBLock[0] = neighborhood[:, :32, :32]
@@ -194,11 +193,6 @@ class LensletBlockedReferencer(Dataset):
             #print(inputBLock.shape)
             return inputBLock, expected_block
         
-        #elif self.model == "siamese":
-        #    inputBLock1 = neighborhood[:, :32, :32]
-        #    inputBLock2 = neighborhood[:, :32, 32:self.context_size]
-        #    inputBLock3 = neighborhood[:, 32:self.context_size, :32]
-        #    return inputBLock1, inputBLock2, inputBLock3, expected_block
 
        
         return neighborhood, expected_block

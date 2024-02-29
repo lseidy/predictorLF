@@ -15,4 +15,4 @@
 #python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandbù
 
 #QUICK DEBUG RUN PC
-python3 Runner.py --no-wandb --limit-train 1 --limit-val 1 --transforms 3 --std-path /home/machado --dataset-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB --test-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB
+python3 Runner.py --no-wandb --limit-train 1 --limit-val 1 --model zhong --std-path /home/machado --dataset-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB --test-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB
