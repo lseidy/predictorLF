@@ -1,4 +1,4 @@
 __pycache__
 src/wandb
 venv
-run*.sh
+src/run.sh
