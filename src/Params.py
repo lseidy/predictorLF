@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
-    parser.add_argument('--loss', type=str, default='mse', help='Loss functionto minimize [mse|satd]')
+    parser.add_argument('--loss', type=str, default='satd', help='Loss functionto minimize [mse|satd]')
     parser.add_argument('--loss-mode', type=str, default='predOnly', help='Defines context for loss [predOnly|fullContext]')
     #parser.add_argument('--context-mode', type=str, default='black', help='Defines context for prediction [black|average]')
 
@@ -51,7 +51,7 @@ def get_args():
     parser.add_argument("--bit-depth",      default=8,      type=int, help="Bit Depth")
     parser.add_argument("--limit-train",    default=-1,     type=int, help="Max num of LFs to train. (FOR QUICK TEST PURPOUSES ONLY)")
     parser.add_argument("--limit-val",      default=-1,     type=int, help="Max num of LFs to val. (FOR QUICK TEST PURPOUSES ONLY)")
-    parser.add_argument('--transforms',     type=str,       default='none', help='Direcory with test pngs')
+    parser.add_argument('--transforms',     type=str,       default='3', help='Direcory with test pngs')
 
     parser.add_argument('--no-wandb', dest='wandb_active', action='store_false')
 
