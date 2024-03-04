@@ -1,45 +1,21 @@
-from argparse import Namespace
 
+import sys
 import numpy as np
+import wandb
 import torch
 import torch.nn as nn
 from torchvision.utils import save_image
-import wandb
+from argparse import Namespace
 from PIL import Image
 from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
-import sys
+
 
 import LightField as LF
-            
-
 from customLearningRateScaler import CustomExpLr as lrScaler
-
-from scipy.linalg import hadamard
-
-
-class CustomSATDLoss(nn.Module):
-    def __init__(self):
-        super(CustomSATDLoss, self).__init__()
-
-    def hadamard_transform(self, block):
-        hadamard_transform = torch.from_numpy(hadamard(block.shape[-1])).to(block.device, dtype=torch.float32)
-        return torch.matmul(hadamard_transform, block)
-
-
-    def satd_loss(self, original, pred):
-        #transformed_original = self.hadamard_transform(original)
-        #transformed_pred = self.hadamard_transform(pred)
-        return torch.sum(torch.abs(self.hadamard_transform(original - pred)))
-
-
-    def forward(self, original, pred):
-        return self.satd_loss(original, pred)
-    
-
-
+from customLosses import CustomLoss
 
 class Trainer:
 
@@ -59,9 +35,9 @@ class Trainer:
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
-        elif self.params.loss == 'satd':
-            self.loss = CustomSATDLoss()
-            print("Using SATD")
+        elif self.params.loss == 'satd' or self.params.loss == 'dct':
+            self.loss = CustomLoss(self.params.loss)
+            print("Using Custom Loss ", self.params.loss)
         else:
             print("Unknown Loss Metric")
             exit(404)

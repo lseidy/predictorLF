@@ -39,13 +39,13 @@ def read_images_in_order(folder_path, max_rows, max_cols):
     return np.concatenate(lf_concatenated, axis=0)
 
 if __name__ == "__main__":
-    folder_path = "/home/machado/gianLucaDataset/chessboard_lightfield_syn_v1/test_finale/images"
+    folder_path = "/home/machado/Downloads/chessboard(1)/chessboard/images/0"
     max_rows = 15
     max_cols = 15
     lf_image = read_images_in_order(folder_path, max_rows, max_cols)
 
     # Save the concatenated LF image
-    output_file_path = "/home/machado/gianLucaDataset/chessboard_lightfield_syn_v1/test_finale/images/all.png"
+    output_file_path = folder_path+"/all.png"
     cv2.imwrite(output_file_path, lf_image)
 
     print(f"Concatenated LF image saved as {output_file_path}")
