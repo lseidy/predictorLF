@@ -61,7 +61,8 @@ def main():
                 "Skip Connections": params.skip,
                 "Num-Filters": params.num_filters,
                 "Context Size": params.context_size,
-                "Predictor Size": params.predictor_size
+                "Predictor Size": params.predictor_size,
+                "Transforms": params.transforms
 
 
             }
