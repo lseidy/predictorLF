@@ -12,7 +12,9 @@ import albumentations as A
 from LightField import LightField
 import numpy as np
 
-# from multipledispatch import dispatch
+import torchvision.transforms.v2  as transforms
+
+
 
 class DataSet:
     def __init__(self, params):
@@ -78,6 +80,31 @@ class DataSet:
 
 
 
+import torch.jit as jit
+
+class RandomImageTransforms(jit.ScriptModule):
+    def __init__(self):
+        super(RandomImageTransforms, self).__init__()
+
+    @jit.script_method
+    def forward(self, image):
+        # Define a list of transformations to randomly apply
+        random_transforms = transforms.Compose[
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomVerticalFlip(p=0.5),
+            transforms.RandomRotation(degrees=45),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+            transforms.RandomResizedCrop(size=(256, 256), scale=(0.8, 1.0)),
+            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=15),
+        ]
+        
+        # Randomly apply a subset of transformations
+        transform = transforms.Compose(random_transforms)
+        
+        return transform(image)
+    
+
+
 class LazyList(Dataset):
     def __init__(self, inner_storage : List, transforms, bit_depth = 8):
         self.inner_storage = inner_storage
@@ -117,13 +144,23 @@ class LensletBlockedReferencer(Dataset):
 
         if self.doTransforms != "none":
             if  self.doTransforms == "3": 
-                self.transform = A.Compose(
-                [
-                    A.Rotate(limit=(-90,-90), p=0.5),
-                    A.HorizontalFlip(p=0.5),
-                    A.VerticalFlip(p=0.5)
+                self.transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomVerticalFlip(p=0.5),
+                transforms.RandomRotation(degrees=90),
                 ])
+
                 #print("Using rotation/flips transform")
+            elif self.doTransforms == "4":
+                self.transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomVerticalFlip(p=0.5),
+                transforms.RandomRotation(degrees=90),
+                transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
+                transforms.RandomAdjustSharpness(1.5, p=0.5),
+                transforms.RandomAutocontrast(p=0.5),   
+                transforms.RandomEqualize(p=0.5),
+                ])
             elif self.doTransforms == "2":
                 self.transform = A.Compose(
                 [
@@ -149,9 +186,12 @@ class LensletBlockedReferencer(Dataset):
         stepJ = j * self.predictor_size
         section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
         
-        if(self.doTransforms != "none"):
+        if(self.doTransforms == "4"):
+            section = self.transform(section)
+        elif(self.doTransforms != "none"):
             section = self.transform(image=np.asarray(section, dtype=np.float32))['image']
             section = torch.from_numpy(section.copy())
+        
 
         # print("section ", section.shape)
         """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)
