@@ -164,7 +164,7 @@ class LensletBlockedReferencer(Dataset):
         stepJ = j * self.predictor_size
         section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
         
-        if(self.doTransforms == "4"):
+        if(self.doTransforms == "4" or self.doTransforms == "3"):
             section = self.transform(section)
         elif(self.doTransforms != "none"):
             section = self.transform(image=np.asarray(section, dtype=np.float32))['image']

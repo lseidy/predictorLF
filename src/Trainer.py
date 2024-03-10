@@ -54,10 +54,6 @@ class Trainer:
         # TODO REMOVE
         self.count_blocks = 0
 
-
-
-
-
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
                                     pin_memory=True, prefetch_factor=2)
         self.val_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
@@ -65,12 +61,9 @@ class Trainer:
         self.test_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
                                    pin_memory=True)
         
-        
-
 
         # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
-
 
 
         if params.resume != '':
@@ -114,9 +107,15 @@ class Trainer:
 
 
         
-        
-        self.optimizer = torch.optim.Adam(
-        self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        if params.optimizer == 'adam':
+            self.optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        elif params.optimizer == 'sgd':
+            self.optimizer = torch.optim.SGD(
+            self.model.parameters(), lr=params.lr)
+        else:
+            print("UNKNOWN OPTIMIZER")
+            exit(404)
 
         if params.resume != '':
             self.optimizer.load_state_dict(checkpoint['optimizer'])

@@ -40,6 +40,8 @@ def get_args():
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
     parser.add_argument("--lr-scheduler", default="lr", type=str,
                         help="the lr scheduler (default: steplr)")
+    parser.add_argument("--optimizer", default="adam", type=str,
+                        help="the optimizer (default: adam)")
 
 
     # parameters of the DataSet
