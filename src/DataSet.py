@@ -12,7 +12,7 @@ import albumentations as A
 from LightField import LightField
 import numpy as np
 
-import torchvision.transforms.v2  as transforms
+#import torchvision.transforms.v2  as transforms
 
 
 
@@ -80,28 +80,7 @@ class DataSet:
 
 
 
-import torch.jit as jit
 
-class RandomImageTransforms(jit.ScriptModule):
-    def __init__(self):
-        super(RandomImageTransforms, self).__init__()
-
-    @jit.script_method
-    def forward(self, image):
-        # Define a list of transformations to randomly apply
-        random_transforms = transforms.Compose[
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomVerticalFlip(p=0.5),
-            transforms.RandomRotation(degrees=45),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-            transforms.RandomResizedCrop(size=(256, 256), scale=(0.8, 1.0)),
-            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=15),
-        ]
-        
-        # Randomly apply a subset of transformations
-        transform = transforms.Compose(random_transforms)
-        
-        return transform(image)
     
 
 
@@ -144,22 +123,21 @@ class LensletBlockedReferencer(Dataset):
 
         if self.doTransforms != "none":
             if  self.doTransforms == "3": 
-                self.transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomRotation(degrees=90),
+                self.transform = T.Compose([
+                T.RandomHorizontalFlip(p=0.5),
+                T.RandomVerticalFlip(p=0.5),
+                T.RandomRotation(degrees=90),
                 ])
 
                 #print("Using rotation/flips transform")
             elif self.doTransforms == "4":
-                self.transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomRotation(degrees=90),
-                transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
-                transforms.RandomAdjustSharpness(1.5, p=0.5),
-                transforms.RandomAutocontrast(p=0.5),   
-                transforms.RandomEqualize(p=0.5),
+                self.transform = T.Compose([
+                T.RandomHorizontalFlip(p=0.5),
+                T.RandomVerticalFlip(p=0.5),
+                T.RandomRotation(degrees=90),
+                T.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
+                T.RandomAdjustSharpness(1.5, p=0.5),
+                T.RandomAutocontrast(p=0.5),   
                 ])
             elif self.doTransforms == "2":
                 self.transform = A.Compose(
