@@ -297,7 +297,7 @@ class Trainer:
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
-                    result_entropy += shannon_entropy(batch.detach().numpy())
+                    result_entropy += shannon_entropy(batch.cpu().detach().numpy())
                 result_entropy = result_entropy/count_batchs
 
 
