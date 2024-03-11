@@ -36,7 +36,7 @@ class Trainer:
             self.loss = nn.MSELoss()
             print("Using MSE")
         elif self.params.loss == 'satd' or self.params.loss == 'dct':
-            self.loss = CustomLoss(self.params.loss)
+            self.loss = CustomLoss(self.params.loss, "lowPass")
             print("Using Custom Loss ", self.params.loss)
         else:
             print("Unknown Loss Metric")
