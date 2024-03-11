@@ -53,6 +53,7 @@ def main():
                 "learning_rate": params.lr,
                 "Loss": params.loss,
                 "scheduler": params.lr_scheduler,
+                "optimizer": params.optimizer,
                 "name": config_name,
                 "Training Size": len(dataset.list_train),
                 "Test Size": len(dataset.list_test),
