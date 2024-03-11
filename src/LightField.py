@@ -68,9 +68,9 @@ def denormalize_image( image, bit_depth: int):
     import torch
     normalizer_factor = (2**bit_depth-1) / 2
     if bit_depth == 16:
-        return image.astype(np.float32) * normalizer_factor
+        return image * normalizer_factor
     elif bit_depth == 8:
-        return torch.from_numpy(np.array(image).astype(np.float32) * normalizer_factor)
+        return image * normalizer_factor
     else:
         print("Image type not supported, implementation necessary.")
         exit(255)

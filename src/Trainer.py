@@ -288,16 +288,16 @@ class Trainer:
 
 
 
-
                 loss = self.loss(predicted, actual_block)
 
 
-                res = (torch.abs(LF.denormalize_image(predicted.cpu().detach(),8)-LF.denormalize_image(actual_block.cpu().detach(), 8))).int()
+                res = (torch.abs(LF.denormalize_image(predicted,8)-LF.denormalize_image(actual_block, 8)))
+                
                 result_entropy=0
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
-                    result_entropy += shannon_entropy(batch)
+                    result_entropy += shannon_entropy(batch.detach().numpy())
                 result_entropy = result_entropy/count_batchs
 
 
