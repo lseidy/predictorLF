@@ -30,7 +30,10 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
-    parser.add_argument('--loss', type=str, default='satd', help='Loss functionto minimize [mse|satd]')
+    parser.add_argument('--loss', type=str, default='satd', help='Loss functionto minimize [mse|satd|dct]')
+    parser.add_argument('--quantize-loss', dest='quantization', action='store_true', help='perform quantization during customLoss')
+    parser.add_argument('--denormalize-loss', dest='denormalize_loss', action='store_true', help='denormalize block before calc. loss')
+ 
     parser.add_argument('--loss-mode', type=str, default='predOnly', help='Defines context for loss [predOnly|fullContext]')
     #parser.add_argument('--context-mode', type=str, default='black', help='Defines context for prediction [black|average]')
 
