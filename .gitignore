@@ -2,3 +2,4 @@ __pycache__
 src/wandb
 venv
 src/run.sh
+wandb

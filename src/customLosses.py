@@ -25,11 +25,11 @@ class CustomLoss(nn.Module):
         return x
 
     def custom_loss(self, original, pred):
-        if self.loss_type == 'satd':
-            return torch.sum(torch.abs(self.quantization.quantize(self.hadamard_transform(LF.denormalize_image(original,8) - LF.denormalize_image(pred,8)))))
+        if self.loss_type == 'satd':  
+            return torch.sum(torch.abs(self.quantization.quantize(self.hadamard_transform(original-pred))))
         
-        if self.loss_type == 'dct':
-            res = original - pred
+        elif self.loss_type == 'dct':
+            res = LF.denormalize_image(original,8) - LF.denormalize_image(pred,8)
             return torch.sum(torch.abs(self.quantization.quantize(self.dct2(res))))
         else:
             print("LOSS NOT FOUND!")

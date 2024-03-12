@@ -56,6 +56,7 @@ class lowPass():
         self.matrix_values = 1 - 0.75 * scaled_distances
         self.matrix_values = np.clip(self.matrix_values, 0.25, 1)
         self.matrix_values = torch.from_numpy(self.matrix_values)
+        self.matrix_values= self.matrix_values.to("cuda" if torch.cuda.is_available() else "cpu")
 
     def quantize(self, image):
         return image*self.matrix_values
