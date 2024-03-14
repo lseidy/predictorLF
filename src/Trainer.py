@@ -335,6 +335,11 @@ class ModelOracle:
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("inverseStride")
             self.model = UNetSpace
+        elif model_name == 'isometric':
+            from Models.gabriele_k3_Isometric import UNetSpace
+            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+            print("inverseStride")
+            self.model = UNetSpace
         elif model_name == 'LastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace
             self.model = UNetSpace
