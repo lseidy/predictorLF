@@ -1,4 +1,3 @@
-from scipy.fftpack import dct
 from scipy.linalg import hadamard
 import numpy as np
 import torch
@@ -6,7 +5,7 @@ import torch.nn as nn
 import LightField as LF
 from quantizer import lowPass
 class CustomLoss(nn.Module):
-    def __init__(self, loss, quantization=False, denormalize=False, blockSize=32):
+    def __init__(self, loss, quantization, denormalize, blockSize):
         super(CustomLoss, self).__init__()
         self.loss_type = loss
         
@@ -35,7 +34,6 @@ class CustomLoss(nn.Module):
         return x
 
     def custom_loss(self, original, pred):
-
         if self.denormalize:
             res = LF.denormalize_image(original,8) - LF.denormalize_image(pred,8)
         else:
