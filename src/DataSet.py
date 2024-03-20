@@ -115,8 +115,7 @@ class LensletBlockedReferencer(Dataset):
         self.loss_mode = loss_mode
         self.model = model
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
-        # print("inner", self.shape)
+        self.shape = tuple(dim // self.predictor_size - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
         self.doTransforms = doTransforms
@@ -129,7 +128,7 @@ class LensletBlockedReferencer(Dataset):
                 T.RandomRotation(degrees=90),
                 ])
 
-                #print("Using rotation/flips transform")
+
             elif self.doTransforms == "4":
                 self.transform = T.Compose([
                 T.RandomHorizontalFlip(p=0.5),
@@ -145,7 +144,7 @@ class LensletBlockedReferencer(Dataset):
                     A.HorizontalFlip(p=0.5),
                     A.VerticalFlip(p=0.5)
                 ])
-                #print("Using ONLY flips transform")
+
 
         
     def __len__(self):
@@ -157,9 +156,8 @@ class LensletBlockedReferencer(Dataset):
         elif batch_size < 0:
             batch_size += len(self)
         i, j = (batch_size % self.shape[0], batch_size // self.shape[0])
-        # print("i, j = ", i, j)
-        # print("batch_size = ", batch_size)
 
+        
         stepI = i * self.predictor_size
         stepJ = j * self.predictor_size
         section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]

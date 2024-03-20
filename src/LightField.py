@@ -1,5 +1,5 @@
 import os
-
+import torch
 import numpy as np
 from PIL.Image import open, fromarray
 from einops import rearrange
@@ -64,8 +64,8 @@ class LightField:
             exit()
         return img
 
-def denormalize_image( image, bit_depth: int):
+def denormalize_image( image: torch.tensor, bit_depth: int):
     normalizer_factor = (2**bit_depth-1) / 2
-    return image * normalizer_factor
+    return (image * normalizer_factor).int()
 
     
