@@ -38,20 +38,20 @@ class UNetSpace(nn.Module):
 
         flat_model = type_mode([  # 18, 64²
             nn.Sequential(
-                Conv2d(1, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 64²
-                Conv2d(n_filters, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
-                Conv2d((n_filters*4), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d(n_filters, (n_filters * 4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
             ),
             nn.Sequential(
-                Conv2d((n_filters*4), (n_filters*16), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
-                Conv2d((n_filters*16), (n_filters*16), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*4), (n_filters*16), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d((n_filters*16), (n_filters*16), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
             ),
             nn.Sequential(
-                Conv2d((n_filters*16), (n_filters*64), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
-                Conv2d((n_filters*64), (n_filters*64), 3, stride=1, padding=1), nn.PReLU(),  # 10, 4²
+                Conv2d((n_filters*16), (n_filters*64), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*64), (n_filters*64), 3, stride=2, padding=1), nn.PReLU(),  # 10, 4²
             ),
             nn.Sequential(
                 Conv2d((n_filters*64), 256, 3, stride=1, padding=1), nn.PReLU(),  # 10, 4

@@ -23,7 +23,7 @@ class Trainer:
 
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
-        # TODO make loss GREAT AGAIN, nope, make it a param.
+        self.config_name = config_name
 
         self.params = params
         self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
@@ -281,9 +281,9 @@ class Trainer:
                         if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
                             # print("counts save", it_j, it_i)
                             if val == 0:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/train/allBlocks_{i}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/validation/allBlocks_{i}_{current_epoch}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
 
 
