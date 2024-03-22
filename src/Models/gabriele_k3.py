@@ -6,7 +6,7 @@ import torch.nn as nn
 from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
 from torch.nn import Conv2d, ConvTranspose2d
-
+from Models.residualModel import residualCon
 
 class UNetSpace(nn.Module):
     def __init__(self, name, params):
