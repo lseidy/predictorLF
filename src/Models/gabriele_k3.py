@@ -6,7 +6,7 @@ import torch.nn as nn
 from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
 from torch.nn import Conv2d, ConvTranspose2d
-
+from Models.residualModel import residualCon
 
 class UNetSpace(nn.Module):
     def __init__(self, name, params):
@@ -16,12 +16,15 @@ class UNetSpace(nn.Module):
         print("n_filters: ", n_filters)
         #print("kernels 3 no_skip ", params.no_skip)
 
-        if not params.skip:
+        if params.skip_connections == "noSkip":
             type_mode = RegModel
             mul_fact = 1
             print("kernels 3 no-skip")
-
-        elif params.skip:
+        elif params.skip_connections == "residual":
+            type_mode = residualCon
+            mul_fact = 1
+            print("kernels 3 Residual")
+        elif params.skip_connections == "skip":
             type_mode = UNetLike
             mul_fact = 2
             print("kernels 3 skip")

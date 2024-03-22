@@ -80,7 +80,7 @@ def get_args():
 
     parser.add_argument('--model', default='Unet3k', type=str)
     parser.add_argument('--num-filters', default=32, type=int)
-    parser.add_argument('--skip', dest='skip', action='store_true')
+    parser.add_argument('--skip-connections',  default='noSkip', type=str)
 
 
 
