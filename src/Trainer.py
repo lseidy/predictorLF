@@ -204,7 +204,7 @@ class Trainer:
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
                                                   loss_mode=self.params.loss_mode, model= self.model_name, 
-                                                  doTransforms = self.params.transforms)
+                                                  doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:

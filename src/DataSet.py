@@ -11,7 +11,7 @@ import torchvision.transforms as T
 
 from LightField import LightField
 import numpy as np
-
+import random
 #import torchvision.transforms.v2  as transforms
 
 
@@ -104,7 +104,8 @@ class LazyList(Dataset):
 class LensletBlockedReferencer(Dataset):
     # possible TODO: make MI_size take a tuple
     def __init__(self, original, MI_size, predictor_size=32, context_size=64, 
-                 loss_mode="predOnly", model="gabriele", doTransforms= "none"):
+                 loss_mode="predOnly", model="gabriele", doTransforms= "none", crop_mode= "sequential"):
+
         super().__init__()
         self.count=0
         self.decoded = original[0, :1, :, :]
@@ -113,38 +114,15 @@ class LensletBlockedReferencer(Dataset):
         self.context_size= context_size * MI_size
         self.inner_shape = original.shape
         self.loss_mode = loss_mode
+        self.crop_mode = crop_mode
         self.model = model
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.predictor_size - 1 for dim in self.inner_shape[-2:])
+        self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
         self.doTransforms = doTransforms
-
-        if self.doTransforms != "none":
-            if  self.doTransforms == "3": 
-                self.transform = T.Compose([
-                T.RandomHorizontalFlip(p=0.5),
-                T.RandomVerticalFlip(p=0.5),
-                T.RandomRotation(degrees=90),
-                ])
-
-
-            elif self.doTransforms == "4":
-                self.transform = T.Compose([
-                T.RandomHorizontalFlip(p=0.5),
-                T.RandomVerticalFlip(p=0.5),
-                T.RandomRotation(degrees=90),
-                T.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
-                T.RandomAdjustSharpness(1.5, p=0.5),
-                T.RandomAutocontrast(p=0.5),   
-                ])
-            elif self.doTransforms == "2":
-                self.transform = A.Compose(
-                [
-                    A.HorizontalFlip(p=0.5),
-                    A.VerticalFlip(p=0.5)
-                ])
-
+        self.max_steps_h = (self.inner_shape[3] - self.context_size) // 8
+        self.max_steps_v = (self.inner_shape[2] - self.context_size) // 8
 
         
     def __len__(self):
@@ -158,10 +136,27 @@ class LensletBlockedReferencer(Dataset):
         i, j = (batch_size % self.shape[0], batch_size // self.shape[0])
 
         
-        stepI = i * self.predictor_size
-        stepJ = j * self.predictor_size
-        section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
-        
+        if self.crop_mode == "sequential":
+            stepI = i * self.predictor_size
+            stepJ = j * self.predictor_size
+            section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
+        elif self.crop_mode == "randomCrops":
+            #print(self.inner_shape)
+            random_stepH = random.randint(0, self.max_steps_h)*8
+            random_stepV = random.randint(0, self.max_steps_v)*8
+            #print(random_stepH)
+            #print(random_stepV)
+            section = self.decoded[:, random_stepV:random_stepV+self.context_size, random_stepH:random_stepH+self.context_size]
+
+
+        if  self.doTransforms == "3":
+            rotation_angles = [0, 90, 180, 270]
+            random_angle = random.choice(rotation_angles)
+            self.transform = T.Compose([
+            T.RandomHorizontalFlip(p=0.5),
+            T.RandomRotation(degrees=[random_angle, random_angle]),
+        ])
+
         if(self.doTransforms != "none"):
             section = self.transform(section)
         
