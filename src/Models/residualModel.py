@@ -28,9 +28,9 @@ class residualCon(nn.Module):
                 residual = input
                 input = enc(input)
                 if input.shape[2] != residual.shape[2]:
-                     downSampler = nn.Conv2d(residual.shape[1], input.shape[1], kernel_size=1, stride=2, bias=False)
+                     downSampler = nn.Conv2d(residual.shape[1], input.shape[1], kernel_size=1, stride=2, bias=False).to(input.device)
                 else:
-                    downSampler = nn.Conv2d(residual.shape[1], input.shape[1], kernel_size=1, stride=1, bias=False)
+                    downSampler = nn.Conv2d(residual.shape[1], input.shape[1], kernel_size=1, stride=1, bias=False).to(input.device)
                 downSampled = downSampler(residual)
                 input += downSampled
         

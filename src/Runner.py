@@ -59,11 +59,12 @@ def main():
                 "Test Size": len(dataset.list_test),
                 "Bit-Depth": dataset.bit_depth,
                 "Model": params.model,
-                "Skip Connections": params.skip,
+                "Skip Connections": params.skip_connections,
                 "Num-Filters": params.num_filters,
                 "Context Size": params.context_size,
                 "Predictor Size": params.predictor_size,
-                "Transforms": params.transforms
+                "Transforms": params.transforms,
+                "Crop-mode": params.crop_mode
 
 
             }
