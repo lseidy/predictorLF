@@ -46,3 +46,9 @@ class CustomLoss(nn.Module):
 
     def forward(self, original, pred):
         return self.custom_loss(original, pred)
+    
+class SAD(nn.Module):
+
+    def forward(self, original, pred):
+        res = original - pred
+        return torch.sum(torch.abs((res)))
