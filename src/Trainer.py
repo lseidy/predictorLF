@@ -16,6 +16,7 @@ from DataSet import DataSet, LensletBlockedReferencer
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss
+from customLosses import SAD
 
 class Trainer:
 
@@ -35,6 +36,9 @@ class Trainer:
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
+        elif self.params.loss == 'sad':
+            self.loss = SAD()
+            print("Using SAD")
         elif self.params.loss == 'satd' or self.params.loss == 'dct':
             self.loss = CustomLoss(self.params.loss, self.params.quantization, self.params.denormalize_loss,  self.predictor_size_v)
             print("Using Custom Loss ", self.params.loss)

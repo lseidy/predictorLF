@@ -115,7 +115,7 @@ class LensletBlockedReferencer(Dataset):
         self.loss_mode = loss_mode
         self.model = model
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.predictor_size - 1 for dim in self.inner_shape[-2:])
+        self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
         self.doTransforms = doTransforms
