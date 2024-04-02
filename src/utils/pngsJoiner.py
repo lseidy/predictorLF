@@ -36,10 +36,13 @@ def read_images_in_order(folder_path, max_rows, max_cols):
         if row_images:
             lf_concatenated.append(np.concatenate(row_images, axis=1))
 
+    lf_image = np.concatenate(lf_concatenated, axis=0)
+    cv2.imwrite(folder_path+"/all.png", lf_image)
+
     return np.concatenate(lf_concatenated, axis=0)
 
 if __name__ == "__main__":
-    folder_path = "/home/machado/Downloads/chessboard(1)/chessboard/images/0"
+    folder_path = "/home/machado/test_real_chessboard/images/0/"
     max_rows = 15
     max_cols = 15
     lf_image = read_images_in_order(folder_path, max_rows, max_cols)
