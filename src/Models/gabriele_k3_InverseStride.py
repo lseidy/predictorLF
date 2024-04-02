@@ -5,8 +5,9 @@ import torch
 import torch.nn as nn
 from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
-from torch.nn import Conv2d, ConvTranspose2d
 from Models.residualModel import residualCon
+from torch.nn import Conv2d, ConvTranspose2d
+
 
 class UNetSpace(nn.Module):
     def __init__(self, name, params):
@@ -16,6 +17,8 @@ class UNetSpace(nn.Module):
         print("n_filters: ", n_filters)
         #print("kernels 3 no_skip ", params.no_skip)
 
+        #TODO ADAPT PARAMETER TO MULTIPLE CONECTION TYPES
+        
         if params.skip_connections == "noSkip":
             type_mode = RegModel
             mul_fact = 1
@@ -30,22 +33,23 @@ class UNetSpace(nn.Module):
             print("kernels 3 skip")
 
 
+
         flat_model = type_mode([  # 18, 64²
             nn.Sequential(
-                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
-                Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d(1, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 64²
+                Conv2d(n_filters, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 2), 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
-                Conv2d((n_filters*2), (n_filters*2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d(n_filters, (n_filters * 2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d((n_filters*2), (n_filters*2), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
             ),
             nn.Sequential(
-                Conv2d((n_filters*2), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
-                Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*2), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d((n_filters*4), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
             ),
             nn.Sequential(
-                Conv2d((n_filters*4), (n_filters*8), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
-                Conv2d((n_filters*8), (n_filters*8), 3, stride=2, padding=1), nn.PReLU(),  # 10, 4²
+                Conv2d((n_filters*4), (n_filters*8), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*8), (n_filters*8), 3, stride=1, padding=1), nn.PReLU(),  # 10, 4²
             ),
             nn.Sequential(
                 Conv2d((n_filters*8), 512, 3, stride=1, padding=1), nn.PReLU(),  # 10, 4
@@ -90,28 +94,28 @@ class UNetSpace(nn.Module):
         return self.network(X)
 
 
-# #
-# params = Namespace()
-# dims = (8,1,64,64)
-# dims_out = (8,1,32,32)
-# (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size) = dims
-# params.num_filters = 32
-# # print(params)
-# model = UNetSpace("unet_space", params)
-# model.eval()
-# zeros = torch.zeros(1, 1, 64, 64)
-# zeros_t = torch.zeros(8, 1, 32, 32)
-# lossf = nn.MSELoss()
 #
-# from torchsummary import summary
-# with torch.no_grad():
-#     batch_size = model(zeros)
-#     # print("batch_size: ", batch_size.shape)
-#     # batch_size = batch_size[:,:,-32:, -32:]
-#
-#     # summary(model, (1, 64, 64), depth=100)
-#     # print(batch_size.shape)
-#     batch_size = batch_size[:, :, -32:, -32:]
-#     # print(batch_size.shape)
-#
+#params = Namespace()
+#dims = (8,1,64,64)
+#dims_out = (8,1,32,32)
+#(params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size) = dims
+#params.num_filters = 32
+## print(params)
+#model = UNetSpace("unet_space", params)
+#model.eval()
+## zeros = torch.zeros(1, 1, 64, 64)
+## zeros_t = torch.zeros(8, 1, 32, 32)
+## lossf = nn.MSELoss()
+##
+#from torchsummary import summary
+#with torch.no_grad():
+##     batch_size = model(zeros)
+##     # print("batch_size: ", batch_size.shape)
+##     # batch_size = batch_size[:,:,-32:, -32:]
+##
+#    summary(model, (1, 64, 64))
+##     # print(batch_size.shape)
+##     batch_size = batch_size[:, :, -32:, -32:]
+##     # print(batch_size.shape)
+##
 #     # print(lossf(zeros_t, batch_size))

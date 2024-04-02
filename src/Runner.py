@@ -11,7 +11,7 @@ def main():
     params = get_args()
 
     if params.run_name != 'test_dump':  
-        config_name = f"{params.run_name}_{params.model}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
+        config_name = f"{params.run_name}_{params.model}_{params.skip_connections}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
     else:
         config_name = 'test_dump'
    
@@ -53,15 +53,18 @@ def main():
                 "learning_rate": params.lr,
                 "Loss": params.loss,
                 "scheduler": params.lr_scheduler,
+                "optimizer": params.optimizer,
                 "name": config_name,
                 "Training Size": len(dataset.list_train),
                 "Test Size": len(dataset.list_test),
                 "Bit-Depth": dataset.bit_depth,
                 "Model": params.model,
-                "Skip Connections": params.skip,
+                "Skip Connections": params.skip_connections,
                 "Num-Filters": params.num_filters,
                 "Context Size": params.context_size,
-                "Predictor Size": params.predictor_size
+                "Predictor Size": params.predictor_size,
+                "Transforms": params.transforms,
+                "Crop-mode": params.crop_mode
 
 
             }

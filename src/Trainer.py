@@ -16,6 +16,7 @@ from DataSet import DataSet, LensletBlockedReferencer
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss
+from customLosses import SAD
 
 class Trainer:
 
@@ -23,7 +24,7 @@ class Trainer:
 
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
-        # TODO make loss GREAT AGAIN, nope, make it a param.
+        self.config_name = config_name
 
         self.params = params
         self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
@@ -35,8 +36,11 @@ class Trainer:
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
+        elif self.params.loss == 'sad':
+            self.loss = SAD()
+            print("Using SAD")
         elif self.params.loss == 'satd' or self.params.loss == 'dct':
-            self.loss = CustomLoss(self.params.loss)
+            self.loss = CustomLoss(self.params.loss, self.params.quantization, self.params.denormalize_loss,  self.predictor_size_v)
             print("Using Custom Loss ", self.params.loss)
         else:
             print("Unknown Loss Metric")
@@ -54,10 +58,6 @@ class Trainer:
         # TODO REMOVE
         self.count_blocks = 0
 
-
-
-
-
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
                                     pin_memory=True, prefetch_factor=2)
         self.val_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
@@ -65,12 +65,9 @@ class Trainer:
         self.test_set = DataLoader(dataset.list_test, shuffle=False, num_workers=8,
                                    pin_memory=True)
         
-        
-
 
         # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
-
 
 
         if params.resume != '':
@@ -114,9 +111,15 @@ class Trainer:
 
 
         
-        
-        self.optimizer = torch.optim.Adam(
-        self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        if params.optimizer == 'adam':
+            self.optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
+        elif params.optimizer == 'sgd':
+            self.optimizer = torch.optim.SGD(
+            self.model.parameters(), lr=params.lr)
+        else:
+            print("UNKNOWN OPTIMIZER")
+            exit(404)
 
         if params.resume != '':
             self.optimizer.load_state_dict(checkpoint['optimizer'])
@@ -205,7 +208,7 @@ class Trainer:
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
                                                   loss_mode=self.params.loss_mode, model= self.model_name, 
-                                                  doTransforms = self.params.transforms)
+                                                  doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
@@ -282,10 +285,9 @@ class Trainer:
                         if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
                             # print("counts save", it_j, it_i)
                             if val == 0:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/train/allBlocks_{i}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/validation/allBlocks_{i}_{current_epoch}.png")
-
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
 
 
@@ -293,12 +295,13 @@ class Trainer:
                 loss = self.loss(predicted, actual_block)
 
 
-                res = (torch.abs(LF.denormalize_image(predicted.cpu().detach(),8)-LF.denormalize_image(actual_block.cpu().detach(), 8))).int()
+                res = (torch.abs(LF.denormalize_image(predicted,8)-LF.denormalize_image(actual_block, 8)))
+                
                 result_entropy=0
                 count_batchs=0
                 for batch in res:
                     count_batchs+=1
-                    result_entropy += shannon_entropy(batch)
+                    result_entropy += shannon_entropy(batch.cpu().detach().numpy())
                 result_entropy = result_entropy/count_batchs
 
 
@@ -330,6 +333,16 @@ class ModelOracle:
             from Models.gabriele_k3 import UNetSpace
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("gabri_like")
+            self.model = UNetSpace
+        elif model_name == 'inverseStride':
+            from Models.gabriele_k3_InverseStride import UNetSpace
+            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+            print("inverseStride")
+            self.model = UNetSpace
+        elif model_name == 'isometric':
+            from Models.gabriele_k3_Isometric import UNetSpace
+            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
+            print("isometric")
             self.model = UNetSpace
         elif model_name == 'LastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace

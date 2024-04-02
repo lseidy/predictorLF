@@ -1,5 +1,5 @@
 import os
-
+import torch
 import numpy as np
 from PIL.Image import open, fromarray
 from einops import rearrange
@@ -64,13 +64,8 @@ class LightField:
             exit()
         return img
 
-def denormalize_image( image, bit_depth: int):
-    import torch
+def denormalize_image( image: torch.tensor, bit_depth: int):
     normalizer_factor = (2**bit_depth-1) / 2
-    if bit_depth == 16:
-        return image.astype(np.float32) * normalizer_factor
-    elif bit_depth == 8:
-        return torch.from_numpy(np.array(image).astype(np.float32) * normalizer_factor)
-    else:
-        print("Image type not supported, implementation necessary.")
-        exit(255)
+    return (image * normalizer_factor).int()
+
+    
