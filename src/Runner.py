@@ -11,7 +11,7 @@ def main():
     params = get_args()
 
     if params.run_name != 'test_dump':  
-        config_name = f"{params.run_name}_{params.model}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
+        config_name = f"{params.run_name}_{params.model}_{params.skip_connections}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
     else:
         config_name = 'test_dump'
    

@@ -31,7 +31,9 @@ from PIL import Image
 # img = Image.open("/home/idm/nonDivided.png")
 
 
-def multiview2lenslet(img, path_rgb, path_gscale, lf_name):
+def multiview2lenslet(path, path_rgb, path_gscale, lf_name):
+    img = (Image.open(path+f"/{lf_name}"))
+
     image_array = np.array(img)
     image_array = ein.rearrange(image_array, '(v h) (u w)  c -> (h v) (w u)  c', u=8, v=8)
     # Convert the NumPy array back to an image using Pillow
@@ -87,8 +89,8 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
     # grayscale_image = reconstructed_image.convert("L")
     reconstructed_image.save(os.path.join(path_gscale, lf_name))
 
-path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/all_8x8.png"
-pathOut="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
+#path="/home/machado/test_real_chessboard/images/0/all_8x8.png"
+#pathOut="/home/machado/test_real_chessboard/images/0/"
 # pathOutg='/home/machado/Lenslet_8x8_Gscale/'
 #
 #
@@ -103,6 +105,6 @@ pathOut="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
 #     inner_path_g = os.path.join(pathOutg, classe)
 #     for lf in os.listdir(os.path.join(path, classe)):
 #         lf_path = os.path.join(path, classe, lf)
-img = (Image.open(path))
-multiview2lenslet(img, pathOut, pathOut, "all_lesnlet_8x8.png")
+
+#multiview2lenslet(img, pathOut, pathOut, "all_lesnlet_8x8.png")
 
