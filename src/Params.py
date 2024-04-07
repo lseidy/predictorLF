@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
-    parser.add_argument('--crop-mode', type=str, default="sequential",
+    parser.add_argument('--crop-mode', type=str, default="randomCrops",
                         help='crop mode to determine how the image will be cropped by the dataloader [sequential, randomCrops]')
 
     parser.add_argument('--loss', type=str, default='satd', help='Loss functionto minimize [mse|satd|dct]')
@@ -45,7 +45,7 @@ def get_args():
     parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
     parser.add_argument("--lr-scheduler", default="lr", type=str,
-                        help="the lr scheduler (default: steplr)")
+                        help="the lr scheduler [lr|custom]")
     parser.add_argument("--optimizer", default="adam", type=str,
                         help="the optimizer (default: adam) [sgd]")
 
