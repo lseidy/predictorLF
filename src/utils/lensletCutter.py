@@ -18,6 +18,7 @@ def extract_and_save_square_from_png(png_file_path, output_image_path):
     image_cropped.save(output_image_path)
 
 # Example usage:
-png_file_path = '/home/idm/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB/Studio/Ankylosaurus_&_Diplodocus_1.png'
-output_image_path = 'head2_anky-1.png'
-extract_and_save_square_from_png(png_file_path, output_image_path)
+#png_file_path = '/home/idm/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB/Studio/Ankylosaurus_&_Diplodocus_1.png'
+#output_image_path = 'head2_anky-1.png'
+#extract_and_save_square_from_png(png_file_path, output_image_path)
+#
