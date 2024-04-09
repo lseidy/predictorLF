@@ -349,9 +349,9 @@ class ModelOracle:
             self.model = UNetSpace
             print("LastLayer")
         elif model_name == 'NoDoubles':
-            from Models.gabriele_k3_shrink_NoDoubles import UNetSpace
+            from Models.gabriele_k3_shrink_NoDoubles_3L import UNetSpace
             self.model = UNetSpace
-            print("NoDoubles")            
+            print("NoDoubles 3L")            
         elif model_name == 'Unet4k':
             from Models.gabriele_k4 import UNetSpace
             self.model = UNetSpace
