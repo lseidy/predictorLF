@@ -3,9 +3,9 @@ from argparse import Namespace
 
 import torch
 import torch.nn as nn
-from unetModelGabriele import UNetLike
-from ModelGabriele import RegModel
-from residualModel import residualCon
+from Models.unetModelGabriele import UNetLike
+from Models.ModelGabriele import RegModel
+from Models.residualModel import residualCon
 from torch.nn import Conv2d, ConvTranspose2d
 
 
@@ -87,25 +87,25 @@ class UNetSpace(nn.Module):
 
 
 #
-params = Namespace()
-dims = (8,1,64,64)
-dims_out = (8,1,32,32)
-(params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size) = dims
-params.num_filters = 32
-params.skip_connections = "noSkip"
-# print(params)
-model = UNetSpace("unet_space", params)
-model.eval()
-zeros = torch.zeros(1, 1, 64, 64)
-zeros_t = torch.zeros(8, 1, 32, 32)
-lossf = nn.MSELoss()
-from torchsummary import summary
-with torch.no_grad():
-    batch_size = model(zeros)
-    # print("batch_size: ", batch_size.shape)
-    # batch_size = batch_size[:,:,-32:, -32:]
-    summary(model, (1, 64, 64))
-    # print(batch_size.shape)
-    batch_size = batch_size[:, :, -32:, -32:]
-    # print(batch_size.shape)
-    # print(lossf(zeros_t, batch_size))
+#params = Namespace()
+#dims = (8,1,64,64)
+#dims_out = (8,1,32,32)
+#(params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size) = dims
+#params.num_filters = 32
+#params.skip_connections = "noSkip"
+## print(params)
+#model = UNetSpace("unet_space", params)
+#model.eval()
+#zeros = torch.zeros(1, 1, 64, 64)
+#zeros_t = torch.zeros(8, 1, 32, 32)
+#lossf = nn.MSELoss()
+#from torchsummary import summary
+#with torch.no_grad():
+#    batch_size = model(zeros)
+#    # print("batch_size: ", batch_size.shape)
+#    # batch_size = batch_size[:,:,-32:, -32:]
+#    summary(model, (1, 64, 64))
+#    # print(batch_size.shape)
+#    batch_size = batch_size[:, :, -32:, -32:]
+#    # print(batch_size.shape)
+#    # print(lossf(zeros_t, batch_size))
