@@ -16,6 +16,7 @@ from DataSet import DataSet, LensletBlockedReferencer
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss
+from customLosses import SAD
 
 class Trainer:
 
@@ -23,7 +24,7 @@ class Trainer:
 
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
-        # TODO make loss GREAT AGAIN, nope, make it a param.
+        self.config_name = config_name
 
         self.params = params
         self.predictor_size_v = self.params.num_views_ver * self.params.predictor_size
@@ -35,6 +36,9 @@ class Trainer:
         if self.params.loss == 'mse':
             self.loss = nn.MSELoss()
             print("Using MSE")
+        elif self.params.loss == 'sad':
+            self.loss = SAD()
+            print("Using SAD")
         elif self.params.loss == 'satd' or self.params.loss == 'dct':
             self.loss = CustomLoss(self.params.loss, self.params.quantization, self.params.denormalize_loss,  self.predictor_size_v)
             print("Using Custom Loss ", self.params.loss)
@@ -204,7 +208,7 @@ class Trainer:
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
                                                   loss_mode=self.params.loss_mode, model= self.model_name, 
-                                                  doTransforms = self.params.transforms)
+                                                  doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             for neighborhood, actual_block in loader:
@@ -281,9 +285,9 @@ class Trainer:
                         if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
                             # print("counts save", it_j, it_i)
                             if val == 0:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/train/allBlocks_{i}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
-                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.params.run_name}/validation/allBlocks_{i}_{current_epoch}.png")
+                                save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
 
 
@@ -345,9 +349,9 @@ class ModelOracle:
             self.model = UNetSpace
             print("LastLayer")
         elif model_name == 'NoDoubles':
-            from Models.gabriele_k3_shrink_NoDoubles import UNetSpace
+            from Models.gabriele_k3_shrink_NoDoubles_3L import UNetSpace
             self.model = UNetSpace
-            print("NoDoubles")            
+            print("NoDoubles 3L")            
         elif model_name == 'Unet4k':
             from Models.gabriele_k4 import UNetSpace
             self.model = UNetSpace

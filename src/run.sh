@@ -17,6 +17,6 @@ python3 Runner.py  --loss satd --transforms 3 --epochs 200 --predictor-size 8 --
 #python3 Runner.py --model LastLayer --batch-size 64 --predictor-size 32 --limit-train 2 --limit-val 1 --no-wandbù
 
 #QUICK DEBUG RUN PC
-#python3 Runner.py --no-wandb --limit-train 1 --limit-val 1 --model zhong --std-path /home/machado --dataset-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB --test-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_RGB
+#python3 Runner.py --no-wandb --limit-train 1 --limit-val 1 --model zhong --std-path /home/machado --dataset-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_Gscale --test-path /home/machado/New_Extracted_Dataset/EPFL/Lenslet_8x8_Gscale
 python3 Runner.py  --loss satd --transforms 3 --epochs 100 --predictor-size 8 --context-size 16 --run-name context16
 python3 Runner.py  --loss satd --transforms 3 --epochs 120 --resume  /home/machado/scratch/saved_models/transforms8_Unet3k_satd_predS8_64_0.0001/transforms8_Unet3k_satd_predS8_64_0.0001_90.pth.tar --resume-epoch 90 --predictor-size 8 --context-size 16 --run-name context16refined32

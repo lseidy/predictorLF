@@ -15,7 +15,10 @@ def cut_center_LF(lf, size):
     return lf[:, views_start[0]:views_end[0], views_start[1]:views_end[1], :, :]
 
 from PIL import Image as im
-def cut_center(img):
+def cut_center(path, pathout, lfName):
+    img = (IMG.open(path+lfName))
+    
+    
 
     lf = img
     lf = np.array(lf)
@@ -29,8 +32,10 @@ def cut_center(img):
 
 
     data = im.fromarray(lf2)
+    data.save(os.path.join(pathout))
     return data
     # data.save('/home/idm/cut.png')
+<<<<<<< HEAD
 #path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
 #pathOut= path+"/all_8x8.png"
 ##
@@ -41,4 +46,3 @@ def cut_center(img):
 #img = (IMG.open(path+"all.png"))
 #cuted_lf = cut_center(img)
 #cuted_lf.save(os.path.join(pathOut))
-#

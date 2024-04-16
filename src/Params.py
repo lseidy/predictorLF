@@ -30,6 +30,9 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,
                         help='Batch size (default: 64). For crop dataloaders, teh actual BS is multiplied by crops_per_image')
+    parser.add_argument('--crop-mode', type=str, default="randomCrops",
+                        help='crop mode to determine how the image will be cropped by the dataloader [sequential, randomCrops]')
+
     parser.add_argument('--loss', type=str, default='satd', help='Loss functionto minimize [mse|satd|dct]')
     parser.add_argument('--quantize-loss', dest='quantization', action='store_true', help='perform quantization during customLoss')
     parser.add_argument('--denormalize-loss', dest='denormalize_loss', action='store_true', help='denormalize block before calc. loss')
@@ -38,13 +41,13 @@ def get_args():
     #parser.add_argument('--context-mode', type=str, default='black', help='Defines context for prediction [black|average]')
 
     parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
-    parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
-    parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
+    parser.add_argument('--lr-gamma', type=float, default=0.2, help='Learning rate decay factor (default: 0.2)')
+    parser.add_argument('--lr-min', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
-    parser.add_argument("--lr-scheduler", default="lr", type=str,
-                        help="the lr scheduler (default: steplr)")
+    parser.add_argument("--lr-scheduler", default="custom", type=str,
+                        help="the lr scheduler [lr|custom]")
     parser.add_argument("--optimizer", default="adam", type=str,
-                        help="the optimizer (default: adam)")
+                        help="the optimizer (default: adam) [sgd]")
 
 
     # parameters of the DataSet
@@ -80,7 +83,7 @@ def get_args():
 
     parser.add_argument('--model', default='Unet3k', type=str)
     parser.add_argument('--num-filters', default=32, type=int)
-    parser.add_argument('--skip', dest='skip', action='store_true')
+    parser.add_argument('--skip-connections',  default='noSkip', type=str)
 
 
 

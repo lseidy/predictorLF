@@ -7,7 +7,7 @@ from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
 #from Models.residualModel import residualCon
 from torch.nn import Conv2d, ConvTranspose2d
-
+from Models.residualModel import residualCon
 
 class UNetSpace(nn.Module):
     def __init__(self, name, params):
@@ -17,18 +17,17 @@ class UNetSpace(nn.Module):
         print("n_filters: ", n_filters)
         #print("kernels 3 no_skip ", params.no_skip)
 
-        #TODO ADAPT PARAMETER TO MULTIPLE CONECTION TYPES
+    
         
-        if not params.skip:
+        if params.skip_connections == "noSkip":
             type_mode = RegModel
             mul_fact = 1
             print("kernels 3 no-skip")
-        #elif params.skip:
-         #   type_mode = residualCon
-         #   mul_fact = 1
-          #  print("kernels 3 Residual")
-
-        elif params.skip:
+        elif params.skip_connections == "residual":
+            type_mode = residualCon
+            mul_fact = 1
+            print("kernels 3 Residual")
+        elif params.skip_connections == "skip":
             type_mode = UNetLike
             mul_fact = 2
             print("kernels 3 skip")
@@ -38,20 +37,20 @@ class UNetSpace(nn.Module):
 
         flat_model = type_mode([  # 18, 64²
             nn.Sequential(
-                Conv2d(1, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 64²
-                Conv2d(n_filters, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
-                Conv2d((n_filters*4), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d(n_filters, (n_filters * 4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
             ),
             nn.Sequential(
-                Conv2d((n_filters*4), (n_filters*16), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
-                Conv2d((n_filters*16), (n_filters*16), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*4), (n_filters*16), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
+                Conv2d((n_filters*16), (n_filters*16), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
             ),
             nn.Sequential(
-                Conv2d((n_filters*16), (n_filters*64), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
-                Conv2d((n_filters*64), (n_filters*64), 3, stride=1, padding=1), nn.PReLU(),  # 10, 4²
+                Conv2d((n_filters*16), (n_filters*64), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
+                Conv2d((n_filters*64), (n_filters*64), 3, stride=2, padding=1), nn.PReLU(),  # 10, 4²
             ),
             nn.Sequential(
                 Conv2d((n_filters*64), 256, 3, stride=1, padding=1), nn.PReLU(),  # 10, 4
