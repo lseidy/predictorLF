@@ -14,8 +14,9 @@ class MaskedConv2d(nn.Conv2d):
 
         out = super(MaskedConv2d, self).forward(x)
 
-        inc, outc, h, w =  out.shape
-        mask = torch.ones(inc, outc, h, w)
+        _, _, h, w =  out.shape
+        mask = out.clone()
+        mask = torch.ones(mask.shape)
         mask[:, :, h // 2:, w // 2:] = 0
         out *= mask
 
