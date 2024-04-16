@@ -6,15 +6,20 @@ import sys
 class MaskedConv2d(nn.Conv2d):
     def __init__(self, *args, **kwargs):
         super(MaskedConv2d, self).__init__(*args, **kwargs)
-        self.register_buffer('mask', self.weight.data.clone())
-
-        _, _, h, w = self.weight.size()
-        self.mask.fill_(1)
-        self.mask[:, :, h // 2, w // 2:] = 0
+        
+ 
+        
 
     def forward(self, x):
-        self.weight.data *= self.mask
-        return super(MaskedConv2d, self).forward(x)
+
+        out = super(MaskedConv2d, self).forward(x)
+
+        inc, outc, h, w =  out.shape
+        mask = torch.ones(inc, outc, h, w)
+        mask[:, :, h // 2:, w // 2:] = 0
+        out *= mask
+
+        return out
 
 class MaskedModel(nn.Module):
     def __init__(self, encoder, decoder):
