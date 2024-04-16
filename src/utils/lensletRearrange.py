@@ -89,22 +89,22 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
     # grayscale_image = reconstructed_image.convert("L")
     reconstructed_image.save(os.path.join(path_gscale, lf_name))
 
-#path="/home/machado/test_real_chessboard/images/0/all_8x8.png"
-#pathOut="/home/machado/test_real_chessboard/images/0/"
-# pathOutg='/home/machado/Lenslet_8x8_Gscale/'
+#path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/all_8x8.png"
+#pathOut="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
+## pathOutg='/home/machado/Lenslet_8x8_Gscale/'
+##
+##
+## img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
+## img = (Image.open(path))
+## rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
 #
-#
-# img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
-# img = (Image.open(path))
-# rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
-
-# for classe in os.listdir(path):
-#     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
-#     os.makedirs(os.path.join(pathOutg, classe), exist_ok=True)
-#     inner_path_rgb = os.path.join(pathOut, classe)
-#     inner_path_g = os.path.join(pathOutg, classe)
-#     for lf in os.listdir(os.path.join(path, classe)):
-#         lf_path = os.path.join(path, classe, lf)
-
+## for classe in os.listdir(path):
+##     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
+##     os.makedirs(os.path.join(pathOutg, classe), exist_ok=True)
+##     inner_path_rgb = os.path.join(pathOut, classe)
+##     inner_path_g = os.path.join(pathOutg, classe)
+##     for lf in os.listdir(os.path.join(path, classe)):
+##         lf_path = os.path.join(path, classe, lf)
+#img = (Image.open(path))
 #multiview2lenslet(img, pathOut, pathOut, "all_lesnlet_8x8.png")
 

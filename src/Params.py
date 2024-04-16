@@ -41,10 +41,10 @@ def get_args():
     #parser.add_argument('--context-mode', type=str, default='black', help='Defines context for prediction [black|average]')
 
     parser.add_argument('--lr', type=float, default=0.0001, help='Initial learning rate (default: 0.0001)')
-    parser.add_argument('--lr-gamma', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
-    parser.add_argument('--lr-min', type=float, default=0.0, help='Learning rate decay factor (default: 0.1)')
+    parser.add_argument('--lr-gamma', type=float, default=0.2, help='Learning rate decay factor (default: 0.2)')
+    parser.add_argument('--lr-min', type=float, default=0.1, help='Learning rate decay factor (default: 0.1)')
     parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
-    parser.add_argument("--lr-scheduler", default="lr", type=str,
+    parser.add_argument("--lr-scheduler", default="custom", type=str,
                         help="the lr scheduler [lr|custom]")
     parser.add_argument("--optimizer", default="adam", type=str,
                         help="the optimizer (default: adam) [sgd]")
