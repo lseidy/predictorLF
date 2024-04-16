@@ -141,11 +141,8 @@ class LensletBlockedReferencer(Dataset):
             stepJ = j * self.predictor_size
             section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
         elif self.crop_mode == "randomCrops":
-            #print(self.inner_shape)
             random_stepH = random.randint(0, self.max_steps_h)*8
             random_stepV = random.randint(0, self.max_steps_v)*8
-            #print(random_stepH)
-            #print(random_stepV)
             section = self.decoded[:, random_stepV:random_stepV+self.context_size, random_stepH:random_stepH+self.context_size]
 
 

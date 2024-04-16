@@ -39,9 +39,8 @@ def main():
         wandb.login(key="9a53bad34073a4b6bcfa6c2cb67a857e976d86c4" ,force=True)
 
         wandb.init(
-            # set the wandb project where this run will be logged
+           
             project="predictorUnet",
-            # track hyperparameters and run metadata
             name=config_name,
             config={
                 "architecture": params.model,
@@ -53,6 +52,8 @@ def main():
                 "learning_rate": params.lr,
                 "Loss": params.loss,
                 "scheduler": params.lr_scheduler,
+                "lr-gamma": params.lr_gamma,
+                "lr-step": params.lr_step_size,
                 "optimizer": params.optimizer,
                 "name": config_name,
                 "Training Size": len(dataset.list_train),
@@ -70,22 +71,10 @@ def main():
             }
         )
 
-
-
-    # for lf in dataset.list_test.inner_storage:
-    #     print(lf.name)
-
-
     Trainer(dataset, config_name, params)
 
     if params.wandb_active:
         wandb.finish()
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

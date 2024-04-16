@@ -5,11 +5,13 @@ import torch
 import torch.nn as nn
 from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
+from Models.ModelGabriele_masked import MaskedModel
+from Models.ModelGabriele_masked import MaskedConv2d
 from Models.residualModel import residualCon
 from torch.nn import Conv2d, ConvTranspose2d
 
 
-class UNetSpace(nn.Module):
+class NNModel(nn.Module):
     def __init__(self, name, params):
         super().__init__()
         # s, t, u, v = (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size)
@@ -18,7 +20,7 @@ class UNetSpace(nn.Module):
         #print("kernels 3 no_skip ", params.no_skip)
 
         if params.skip_connections == "noSkip":
-            type_mode = RegModel
+            type_mode = MaskedModel
             mul_fact = 1
             print("kernels 3 no-skip")
         elif params.skip_connections == "residual":
@@ -30,43 +32,46 @@ class UNetSpace(nn.Module):
             mul_fact = 2
             print("kernels 3 skip")
 
+            
+
 
         flat_model = type_mode([  # 18, 64²
             nn.Sequential(
-                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
-                Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
+                MaskedConv2d(in_channels=1, out_channels= n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                MaskedConv2d(in_channels=n_filters, out_channels=n_filters, kernel_size=3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 2), 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
-                Conv2d((n_filters*2), (n_filters*2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
+                MaskedConv2d(in_channels=(n_filters), out_channels= (n_filters*2), kernel_size=3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                MaskedConv2d(in_channels=(n_filters*2), out_channels=(n_filters*2), kernel_size=3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d((n_filters*2), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
-                Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
+                MaskedConv2d(in_channels=(n_filters*2), out_channels= (n_filters*4), kernel_size=3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                MaskedConv2d(in_channels=(n_filters*4), out_channels=(n_filters*4), kernel_size=3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d((n_filters*4), (n_filters*8), 3, stride=1, padding=1), nn.PReLU(),  # 10, 8²
-                Conv2d((n_filters*8), (n_filters*8), 3, stride=2, padding=1), nn.PReLU(),  # 10, 4²
+                MaskedConv2d(in_channels=(n_filters*4), out_channels= (n_filters*8), kernel_size=3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                MaskedConv2d(in_channels=(n_filters*8), out_channels=(n_filters*8), kernel_size=3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d((n_filters*8), 512, 3, stride=1, padding=1), nn.PReLU(),  # 10, 4
+                MaskedConv2d(in_channels=(n_filters*8), out_channels= 512, kernel_size=3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
             ),
 
         ], [
             nn.Sequential(  # 10, 4
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
-                nn.Conv2d(512, n_filters*4, kernel_size=3, stride=1, padding=1), nn.PReLU()
+                MaskedConv2d(in_channels=512, out_channels=n_filters*4, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
             nn.Sequential(  # 10, 8
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 16
-                nn.Conv2d(mul_fact*(n_filters*4), n_filters * 2, kernel_size=3, stride=1, padding=1), nn.PReLU()
+                MaskedConv2d(in_channels=mul_fact*(n_filters*4), out_channels=n_filters * 2, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
             nn.Sequential(  # 10, 510²
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 32
-                nn.Conv2d(mul_fact * (n_filters * 2), n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU()
+                MaskedConv2d(in_channels=mul_fact * (n_filters * 2), out_channels=n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
             nn.Sequential(  # 10, 510²a
-                nn.ConvTranspose2d(mul_fact *(n_filters), 1, kernel_size=4, stride=2, padding=1),
+                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 32
+                MaskedConv2d(in_channels=mul_fact *(n_filters),out_channels=1, kernel_size=4, stride=2, padding=1),
                 nn.Sigmoid()
             )
 

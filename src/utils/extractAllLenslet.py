@@ -34,31 +34,3 @@ def extract_all(classe):
 
 extract_all(sys.argv[1])
 
-#
-# thread1 = threading.Thread(target=extract_all, args=("Grids",))
-# thread2 = threading.Thread(target=extract_all, args=("ISO_and_Colour_Charts",))
-# thread3 = threading.Thread(target=extract_all, args=("Landscapes",))
-# thread4 = threading.Thread(target=extract_all, args=("Light",))
-# thread5 = threading.Thread(target=extract_all, args=("Nature",))
-# thread6 = threading.Thread(target=extract_all, args=("People",))
-# thread7 = threading.Thread(target=extract_all, args=("Studio",))
-# thread8 = threading.Thread(target=extract_all, args=("Urban",))
-#
-# # Start the threads
-# thread1.start()
-# thread2.start()
-# thread3.start()
-# thread4.start()
-# thread5.start()
-# thread6.start()
-# thread7.start()
-# thread8.start()
-# # Wait for all threads to finish
-# thread1.join()
-# thread2.join()
-# thread3.join()
-# thread4.join()
-# thread5.join()
-# thread6.join()
-# thread7.join()
-# thread8.join()

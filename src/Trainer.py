@@ -55,7 +55,6 @@ class Trainer:
         torch.backends.cudnn.benchmark = False
 
 
-        # TODO REMOVE
         self.count_blocks = 0
 
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
@@ -66,12 +65,10 @@ class Trainer:
                                    pin_memory=True)
         
 
-        # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
 
 
         if params.resume != '':
-                    #TODO FINISH RESUMING TRAINING
                     try:
                         checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
                         self.model.load_state_dict(checkpoint["state_dict"])
@@ -187,7 +184,6 @@ class Trainer:
             self.model.train()
             set = self.train_set
         else:
-            # TODO validation set
             set = self.test_set
             self.model.eval()
         resol_ver = self.params.resol_ver
@@ -221,32 +217,21 @@ class Trainer:
                     
                     predicted = self.model(neighborhood)
                 else:
-                    #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
-                    #print(input1.shape)
-                    #print(input2.shape)
-                    #print(input3.shape)
+
 
                     predicted = self.model(input1, input2, input3)
                 
                 if self.params.loss_mode == "predOnly":
                     predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 
-                
-                
 
-                #actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
                     cpu_ref = neighborhood.cpu().detach()
-
-                    # print(cpu_pred)
-                    # print(cpu_orig)
-                    # print(LF.denormalize_image(cpu_orig, 8))
-                    # print(LF.denormalize_image(cpu_pred, 8))
 
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
@@ -261,11 +246,11 @@ class Trainer:
                             print(e)
                             exit()
 
-                        if self.count_blocks < 10 and (current_epoch == 1):
-                            save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
-                            save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
-                            save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
-                        self.count_blocks += 1
+                        #if self.count_blocks < 10 and (current_epoch == 1):
+                        #    save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
+                        #    save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
+                        #    save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
+                        #self.count_blocks += 1
 
                         try:
                             output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred[:, -self.predictor_size_v:, -self.predictor_size_h:]
@@ -331,19 +316,20 @@ class ModelOracle:
         self.model_name = model_name
         if model_name == 'Unet3k':
             from Models.gabriele_k3 import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("gabri_like")
             self.model = UNetSpace
         elif model_name == 'inverseStride':
             from Models.gabriele_k3_InverseStride import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("inverseStride")
             self.model = UNetSpace
         elif model_name == 'isometric':
             from Models.gabriele_k3_Isometric import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("isometric")
             self.model = UNetSpace
+        elif model_name == 'masked':
+            from Models.gabriele_k3_masked import NNModel
+            print("masked")
+            self.model = NNModel
         elif model_name == 'LastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace
             self.model = UNetSpace
