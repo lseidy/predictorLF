@@ -20,13 +20,14 @@ import saveNPY2PNG
 import shutil
 
 def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB_path, lf):
-
+        print("0")
         cfg = pcam.cfg.PlenopticamConfig()
         cfg.default_values()
+        print(os.path.join(path, lf))
         cfg.params[cfg.lfp_path] = os.path.join(path, lf)
         print(cfg.params[cfg.lfp_path])
         # calibration data
-        cfg.params[cfg.cal_path] = '/home/machado/Lytro2.0_Inria_sirocco/LytroIllum_Dataset_INRIA_SIROCCO/caldata-B5144000580.tar'
+        cfg.params[cfg.cal_path] = '/home/machado/caldata-B5143909630.tar'
 
         cfg.params[cfg.opt_cali] = True
         cfg.params[cfg.ptc_leng] = 13
@@ -36,12 +37,12 @@ def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB
         sta = pcam.misc.PlenopticamStatus()
 
         lf_name = lf.split('.')[0] + '.png'
-
+        print(lf)
         reader = pcam.lfp_reader.LfpReader(cfg, sta)
         # reader.main()
         reader.main()
         lfp_img = reader.lfp_img
-
+        print("2")
         # plt.figure()
         # plt.imshow(lfp_img, cmap='gray', interpolation='none')
         # plt.grid(False)
@@ -57,7 +58,7 @@ def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB
         cal_obj = pcam.lfp_calibrator.LfpCalibrator(wht_img, cfg, sta)
         ret = cal_obj.main()
         cfg = cal_obj.cfg
-
+        print("3")
         import matplotlib as mpl
 
         mpl.rcParams['mathtext.fontset'] = 'cm'

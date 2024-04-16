@@ -31,13 +31,14 @@ def cut_center(img):
     data = im.fromarray(lf2)
     return data
     # data.save('/home/idm/cut.png')
-path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
-pathOut= path+"/all_8x8.png"
+#path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
+#pathOut= path+"/all_8x8.png"
+##
+## for classe in os.listdir(path):
+##     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
+##     for lf in os.listdir(os.path.join(path,classe)):
+##         lf_path= os.path.join(path,classe,lf)
+#img = (IMG.open(path+"all.png"))
+#cuted_lf = cut_center(img)
+#cuted_lf.save(os.path.join(pathOut))
 #
-# for classe in os.listdir(path):
-#     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
-#     for lf in os.listdir(os.path.join(path,classe)):
-#         lf_path= os.path.join(path,classe,lf)
-img = (IMG.open(path+"all.png"))
-cuted_lf = cut_center(img)
-cuted_lf.save(os.path.join(pathOut))
