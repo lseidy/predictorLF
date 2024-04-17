@@ -26,9 +26,9 @@ def extract_all(classe):
             print("a")
             try:
                 extractor.extract_lenslet(inner_path, save_lensletGscale_path, save_mv_path, save_lensletRGB_path, lf)
-                os.replace(os.path.join(lfr_path,lf), os.path.join("/home/machado/Lytro2.0_Inria_sirocco/LytroIllum_Dataset_INRIA_SIROCCO/", 'Done15/',lf))
+                os.replace(os.path.join(lfr_path,lf), os.path.join(lfr_path, 'Done15/',lf))
             except IndexError:
-                os.replace(os.path.join(lfr_path, lf), os.path.join("/home/machado/Lytro2.0_Inria_sirocco/LytroIllum_Dataset_INRIA_SIROCCO/", 'Broken15/', lf))
+                os.replace(os.path.join(lfr_path, lf), os.path.join(lfr_path, 'Broken15/', lf))
     print("finished ", classe)
 
 

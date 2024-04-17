@@ -326,6 +326,10 @@ class ModelOracle:
             from Models.gabriele_k3_Isometric import UNetSpace
             print("isometric")
             self.model = UNetSpace
+        elif model_name == 'depthWise':
+            from Models.gabriele_k3_depthWise import NNModel
+            self.model = NNModel
+            print("depthWise")
         elif model_name == 'masked':
             from Models.gabriele_k3_masked import NNModel
             print("masked")

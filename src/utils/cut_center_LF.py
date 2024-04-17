@@ -35,7 +35,7 @@ def cut_center(path, pathout, lfName):
     data.save(os.path.join(pathout))
     return data
     # data.save('/home/idm/cut.png')
-<<<<<<< HEAD
+
 #path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
 #pathOut= path+"/all_8x8.png"
 ##

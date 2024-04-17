@@ -13,11 +13,9 @@ class MaskedConv2d(nn.Conv2d):
     def forward(self, x):
 
         out = super(MaskedConv2d, self).forward(x)
-
         _, _, h, w =  out.shape
-        mask = out.clone()
-        mask = torch.ones(mask.shape)
-        mask[:, :, h // 2:, w // 2:] = 0
+        mask = torch.ones(out.shape).to(out.device)
+        mask[:, :, h//2 +1:, w//2 +1:] = 0
         out *= mask
 
         return out
