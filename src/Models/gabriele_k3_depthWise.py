@@ -37,11 +37,11 @@ class NNModel(nn.Module):
                 Conv2d(n_filters, n_filters, 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 2), 3, stride=1, padding=1, groups = n_filters), nn.PReLU(),  # 10, 32²
+                Conv2d(n_filters, (n_filters * 2), 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
                 Conv2d((n_filters*2), (n_filters*2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
             ),
             nn.Sequential(
-                Conv2d((n_filters*2), (n_filters*4), 3, stride=1, padding=1, groups = (n_filters*2)), nn.PReLU(),  # 10, 16²
+                Conv2d((n_filters*2), (n_filters*4), 3, stride=1, padding=1), nn.PReLU(),  # 10, 16²
                 Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8²
             ),
             nn.Sequential(

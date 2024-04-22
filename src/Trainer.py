@@ -96,6 +96,11 @@ class Trainer:
                 sys.stdout = out
                 summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)])
                 sys.stdout = sys.__stdout__
+            elif self.model_name == 'masked':
+                self.mask = torch.rand((1, 1,params.context_size,params.context_size)).to("cuda")
+                sys.stdout = out
+                summary(self.model, (1, 64, 64), self.mask)
+                sys.stdout = sys.__stdout__
             else:
                 summary(self.model, (1, 64, 64))
                 sys.stdout = out
@@ -213,8 +218,9 @@ class Trainer:
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
             
 
-                if self.params.model != "siamese":
-                    
+                if  self.params.model == "masked":
+                    predicted = self.model(neighborhood, self.mask)
+                elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
                 else:
                     input1= neighborhood[:,:1,:,:].clone()
@@ -331,9 +337,9 @@ class ModelOracle:
             self.model = NNModel
             print("depthWise")
         elif model_name == 'masked':
-            from Models.gabriele_k3_masked import NNModel
-            print("masked")
-            self.model = NNModel
+            from Models.ModelGabriele_masked import ModelPartialConv
+            print("using masked")
+            self.model = ModelPartialConv
         elif model_name == 'LastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace
             self.model = UNetSpace

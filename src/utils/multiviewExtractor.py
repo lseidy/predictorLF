@@ -30,7 +30,7 @@ def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB
         cfg.params[cfg.cal_path] = '/home/machado/caldata-B5143909630.tar'
 
         cfg.params[cfg.opt_cali] = True
-        cfg.params[cfg.ptc_leng] = 13
+        cfg.params[cfg.ptc_leng] = 15
         cfg.params[cfg.cal_meth] = pcam.cfg.constants.CALI_METH[3]
 
         # instantiate status object for progress
@@ -167,7 +167,7 @@ def extract_lenslet(path, save_lensletGscale_path, save_mv_path, save_lensletRGB
 
         #cuted_lf = cut.cut_center(rgb_img)
 
-        llr.multiview2lenslet(rgb_img, save_lensletRGB_path, save_lensletGscale_path, lf_name)
+        #llr.multiview2lenslet(rgb_img, save_lensletRGB_path, save_lensletGscale_path, lf_name)
         print(os.path.join(path, lf_name.split('.')[0]))
         shutil.rmtree(os.path.join(path, lf_name.split('.')[0]), ignore_errors=True, onerror=None)
 
