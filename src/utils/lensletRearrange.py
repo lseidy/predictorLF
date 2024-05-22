@@ -35,7 +35,7 @@ def multiview2lenslet(path, path_rgb, path_gscale, lf_name):
     img = (Image.open(path+f"/{lf_name}"))
 
     image_array = np.array(img)
-    image_array = ein.rearrange(image_array, '(v h) (u w)  c -> (h v) (w u)  c', u=8, v=8)
+    image_array = ein.rearrange(image_array, '(v h) (u w)  c -> (h v) (w u)  c', u=15, v=15)
     # Convert the NumPy array back to an image using Pillow
     reconstructed_image = Image.fromarray(image_array)
 
