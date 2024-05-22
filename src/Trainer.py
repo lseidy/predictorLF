@@ -11,17 +11,16 @@ from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
-
+from prune import get_model_unstructured_sparsity
 
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss
 from customLosses import SAD
+from torch.nn.utils import prune
+
 
 class Trainer:
-
-   
-
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
         self.config_name = config_name
@@ -69,11 +68,11 @@ class Trainer:
 
 
         if params.resume != '':
-                    try:
-                        checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
-                        self.model.load_state_dict(checkpoint["state_dict"])
-                    except RuntimeError as e:
-                        print("Failed to resume model", e)
+            try:
+                checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
+                self.model.load_state_dict(checkpoint["state_dict"])
+            except RuntimeError as e:
+                print("Failed to resume model", e)
 
 
         if torch.cuda.is_available():
@@ -126,54 +125,88 @@ class Trainer:
             wandb.watch(self.model)
 
 
-        if params.lr_scheduler == 'custom':
-            self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
-                                  decay_steps=params.epochs, decay_rate=params.lr_gamma)
-            print("Using Custom Scheduler")
-       
 
+        parameters_to_prune = []
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.Conv2d):
+                parameters_to_prune.append((module, "weight"))
+
+        self.total_weights, self.pruned_weights,  self.sparsity=get_model_unstructured_sparsity(self.model)
         
+        epoch = 0
+        self.prune_count = 0
+        while self.sparsity < params.target_sparsity:
 
+            if  params.prune == True and (epoch >= 1 or params.resume != ''):
 
-        for epoch in range(params.resume_epoch, 1 + params.epochs):
-            #0 for validation off
-            loss, entropy = self.train(epoch, 0, params.wandb_active)
-            print(f"Epoch {epoch}: {loss}, {entropy}")
-
-            if params.wandb_active:
-                wandb.log({f"Epoch": epoch},commit=False)
-                wandb.log({f"Loss_epoch": loss}, commit=False)
-                wandb.log({f"Entropy_epoch": entropy}, commit=False)
-
-            # if epoch == 5:#1 to signalize that the validations is On
-            loss, entropy = self.train(epoch, 1, params.wandb_active)
-            print(f"Validation: {loss}, {entropy}")
-
-            if self.params.lr_scheduler == 'custom':
-                self.scheduler.step()
-
-            if params.wandb_active:
-                wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
-                wandb.log({f"Entropy_VAL_epoch": entropy})
-
-            check = {
-                'epoch': epoch + 1,
-                'state_dict': self.model.state_dict(),
-                'optimizer': self.optimizer.state_dict(),
-            }
-
-
-
-            if params.run_name != "test_dump":
-                if loss < self.best_loss:
-                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestMSE_{config_name}.pth.tar")
-                    self.best_loss = loss
-                if entropy < self.best_entropy:
-                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
-                    self.best_entropy = entropy
-
+                if params.wandb_active and  self.prune_count != 0:
+                    wandb.log({f"Prune Step": self.prune_count}, commit=False)
+                    wandb.log({f"Total Weights": self.total_weights},commit=False)
+                    wandb.log({f"Sparsity": self.sparsity}, commit=False)
+                    wandb.log({f"Loss_Sparsity": loss}, commit=False)
             
-            torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
+                prune.global_unstructured(
+                    parameters=parameters_to_prune,
+                    pruning_method=prune.L1Unstructured,
+                    amount=params.prune_step,
+                )
+                self.total_weights, self.pruned_weights, self.sparsity = get_model_unstructured_sparsity(self.model)
+                self.prune_count += 1
+                print("Prune step:", self.prune_count, "Total Weights:",self.total_weights,
+                      "Pruned Weights:", self.pruned_weights, "Sparsity:", self.sparsity)
+
+
+                    
+            elif not params.prune: 
+                self.sparsity = 100
+
+            if params.lr_scheduler == 'custom':
+                self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+                                    decay_steps=params.epochs, decay_rate=params.lr_gamma)
+                print("Using Custom Scheduler")
+        
+            for epoch in range(params.resume_epoch, params.epochs+1):
+                #0 for validation off
+                loss, entropy = self.train(epoch, 0, params.wandb_active)
+                print(f"Epoch {epoch}: {loss}, {entropy}")
+
+                if params.wandb_active:
+                    wandb.log({f"Epoch": epoch},commit=False)
+                    wandb.log({f"Loss_epoch": loss}, commit=False)
+                    wandb.log({f"Entropy_epoch": entropy}, commit=False)
+
+                # if epoch == 5:#1 to signalize that the validations is On
+                loss, entropy = self.train(epoch, 1, params.wandb_active)
+                print(f"Validation: {loss}, {entropy}")
+
+                if self.params.lr_scheduler == 'custom':
+                    self.scheduler.step()
+
+                if params.wandb_active:
+                    wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
+                    wandb.log({f"Entropy_VAL_epoch": entropy})
+
+                check = {
+                    'epoch': epoch + 1,
+                    'Num Params': self.total_weights-self.pruned_weights,
+                    'Sparsity': self.sparsity,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                    
+                }
+
+                if params.run_name != "test_dump":
+                    if loss < self.best_loss:
+                        torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestMSE_{config_name}.pth.tar")
+                        self.best_loss = loss
+                    if entropy < self.best_entropy:
+                        torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
+                        self.best_entropy = entropy
+
+                if params.prune:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{self.prune_count}.pth.tar")
+                else:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
 

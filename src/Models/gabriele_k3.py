@@ -53,19 +53,19 @@ class UNetSpace(nn.Module):
             ),
 
         ], [
-            nn.Sequential(  # 10, 4
+            nn.Sequential(  
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
                 nn.Conv2d(512, n_filters*4, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
-            nn.Sequential(  # 10, 8
+            nn.Sequential(  
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 16
                 nn.Conv2d(mul_fact*(n_filters*4), n_filters * 2, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
-            nn.Sequential(  # 10, 510²
+            nn.Sequential(  
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 32
                 nn.Conv2d(mul_fact * (n_filters * 2), n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
-            nn.Sequential(  # 10, 510²a
+            nn.Sequential(  
                 nn.ConvTranspose2d(mul_fact *(n_filters), 1, kernel_size=4, stride=2, padding=1),
                 nn.Sigmoid()
             )
