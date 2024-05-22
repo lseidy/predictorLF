@@ -111,7 +111,6 @@ class Trainer:
         self.loss = self.loss.to(device)
 
 
-        
         if params.optimizer == 'adam':
             self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
@@ -122,9 +121,10 @@ class Trainer:
             print("UNKNOWN OPTIMIZER")
             exit(404)
 
-        if params.resume != '':
+        if params.resume != '' and params.prune == False:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             self.optimizer.param_groups[0]['capturable'] = True
+       
 
         if params.wandb_active:
             wandb.watch(self.model)
@@ -141,12 +141,11 @@ class Trainer:
         epoch = 0
         self.prune_count = 0
         while self.sparsity < params.target_sparsity:
-
             if  params.prune == True and (epoch >= 1 or params.resume != ''):
 
                 if params.wandb_active and  self.prune_count != 0:
                     wandb.log({f"Prune Step": self.prune_count}, commit=False)
-                    wandb.log({f"Total Weights": self.total_weights},commit=False)
+                    wandb.log({f"# of Weights": self.total_weights-self.pruned_weights},commit=False)
                     wandb.log({f"Sparsity": self.sparsity}, commit=False)
                     wandb.log({f"Loss_Sparsity": loss}, commit=False)
             
@@ -165,10 +164,11 @@ class Trainer:
             elif not params.prune: 
                 self.sparsity = 100
 
+            
+
             if params.lr_scheduler == 'custom':
                 self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
                                     decay_steps=params.epochs, decay_rate=params.lr_gamma)
-                print("Using Custom Scheduler")
         
             for epoch in range(params.resume_epoch, params.epochs+1):
                 #0 for validation off
@@ -186,10 +186,12 @@ class Trainer:
 
                 if self.params.lr_scheduler == 'custom':
                     self.scheduler.step()
+                print(self.scheduler.lr)
 
                 if params.wandb_active:
                     wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
                     wandb.log({f"Entropy_VAL_epoch": entropy})
+                    wandb.log({f"Learning Rate": self.scheduler.lr})
 
                 check = {
                     'epoch': epoch + 1,
