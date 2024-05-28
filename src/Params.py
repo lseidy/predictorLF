@@ -19,13 +19,10 @@ def get_args():
                         help='Direcory to be root of all others (saved_lfs, saved_models, etc)')
 
 
-
-    # TODO we need a separate bithdepth switch for each dataset!
-    #block size in terms of macro pixels, must be multiplied by number of views in lenslet format
     parser.add_argument('--context-size', type=int, default=64,
-                        help='Size of the context [64, 128] (default 64x64))')
+                        help='Size of the context [16,32,64, 128] (default 64x64))')
     parser.add_argument('--predictor-size', type=int, default=32,
-                        help='Size of the predictor [32, 32] (default 32x32)')
+                        help='Size of the predictor [8,16, 32] (default 32x32)')
 
     parser.add_argument('--epochs', type=int, default=100, help='Epochs to test (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64,

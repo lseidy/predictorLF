@@ -33,22 +33,30 @@ class UNetSpace(nn.Module):
 
         flat_model = type_mode([  # 18, 64²
             nn.Sequential(
-                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 64²
+                Conv2d(1, n_filters, 3, stride=1, padding=1), nn.PReLU(),  # 10, 32²
                
             ),
             nn.Sequential(
-                Conv2d(n_filters, (n_filters * 2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 32²
+                Conv2d(n_filters, (n_filters * 2), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16²
                 
             ),
             nn.Sequential(
-                Conv2d((n_filters*2), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 16
+                Conv2d((n_filters*2), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 8
                 
             ),
+             nn.Sequential(
+                Conv2d((n_filters*4), (n_filters*4), 3, stride=2, padding=1), nn.PReLU(),  # 10, 4
+                
+            ),  
 
         ], [
             nn.Sequential(  # 10, 16
+                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 8
                 nn.Conv2d(mul_fact*(n_filters*4), n_filters * 2, kernel_size=3, stride=1, padding=1), nn.PReLU(),
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 32
+
+            ),
+            nn.Sequential(  # 10, 16
+                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 16
                 nn.Conv2d(mul_fact*(n_filters*2), n_filters, kernel_size=3, stride=1, padding=1), nn.PReLU()
             ),
 
