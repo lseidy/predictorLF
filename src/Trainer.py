@@ -97,7 +97,9 @@ class Trainer:
                 summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)])
                 sys.stdout = sys.__stdout__
             elif self.model_name == 'masked':
-                self.mask = torch.rand((1, 1,params.context_size,params.context_size)).to("cuda")
+                self.mask = torch.ones((1, 1,params.context_size,params.context_size), dtype=torch.float).to("cuda")
+                self.mask[:,:, -params.predictor_size:, -params.predictor_size:] = 0.0
+                summary(self.model, (1, 64, 64), self.mask)
                 sys.stdout = out
                 summary(self.model, (1, 64, 64), self.mask)
                 sys.stdout = sys.__stdout__
@@ -135,6 +137,11 @@ class Trainer:
             self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
                                   decay_steps=params.epochs, decay_rate=params.lr_gamma)
             print("Using Custom Scheduler")
+        elif params.lr_scheduler == 'cosine':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer=self.optimizer, T_max=params.epochs - 0, eta_min=0.00001
+        )
+            print("Using Cosine Scheduler")
        
 
         
@@ -216,7 +223,10 @@ class Trainer:
                 current_batch_size = actual_block.shape[0]
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
-            
+
+                # print(torch.mean(neighborhood[:,:,-self.params.predictor_size,-self.params.predictor_size]))
+                # print(torch.mean(self.mask[:,:,-self.params.predictor_size,-self.params.predictor_size]))
+
 
                 if  self.params.model == "masked":
                     predicted = self.model(neighborhood, self.mask)
@@ -226,8 +236,6 @@ class Trainer:
                     input1= neighborhood[:,:1,:,:].clone()
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
-
-
                     predicted = self.model(input1, input2, input3)
                 
                 if self.params.loss_mode == "predOnly":
@@ -320,7 +328,7 @@ class Trainer:
 class ModelOracle:
     def __init__(self, model_name):
         self.model_name = model_name
-        if model_name == 'Unet3k':
+        if model_name == '3k':
             from Models.gabriele_k3 import UNetSpace
             print("gabri_like")
             self.model = UNetSpace

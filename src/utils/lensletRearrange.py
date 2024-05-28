@@ -31,11 +31,14 @@ from PIL import Image
 # img = Image.open("/home/idm/nonDivided.png")
 
 
-def multiview2lenslet(path, path_rgb, path_gscale, lf_name):
-    img = (Image.open(path+f"/{lf_name}"))
 
+
+def multiview2lenslet(path, path_rgb, path_gscale):
+    print(path)
+    img = (Image.open(path))
+    lf_name = path.split("/")[-1]
     image_array = np.array(img)
-    image_array = ein.rearrange(image_array, '(v h) (u w)  c -> (h v) (w u)  c', u=15, v=15)
+    image_array = ein.rearrange(image_array, '(v h) (u w)  c -> (h v) (w u)  c', u=16, v=16)
     # Convert the NumPy array back to an image using Pillow
     reconstructed_image = Image.fromarray(image_array)
 
@@ -88,23 +91,23 @@ def rotateBlocks(img, path_rgb, path_gscale, lf_name):
 
     # grayscale_image = reconstructed_image.convert("L")
     reconstructed_image.save(os.path.join(path_gscale, lf_name))
-
-#path="/home/machado/Downloads/chessboard(1)/chessboard/images/0/all_8x8.png"
-#pathOut="/home/machado/Downloads/chessboard(1)/chessboard/images/0/"
-## pathOutg='/home/machado/Lenslet_8x8_Gscale/'
-##
-##
-## img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
-## img = (Image.open(path))
-## rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
 #
-## for classe in os.listdir(path):
-##     os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
-##     os.makedirs(os.path.join(pathOutg, classe), exist_ok=True)
-##     inner_path_rgb = os.path.join(pathOut, classe)
-##     inner_path_g = os.path.join(pathOutg, classe)
-##     for lf in os.listdir(os.path.join(path, classe)):
-##         lf_path = os.path.join(path, classe, lf)
-#img = (Image.open(path))
-#multiview2lenslet(img, pathOut, pathOut, "all_lesnlet_8x8.png")
+#path="/home/machado/New_Extracted_Dataset/Multiview_16x16/"
+#pathOut="/home/machado/New_Extracted_Dataset/Lenslet_16x16_RGB/"
+#pathOutg='/home/machado/New_Extracted_Dataset/Lenslet_16x16_Gscale/'
+
+
+ #img = (Image.open("/home/idm/New_Extracted_Dataset/Lenslet_8x8_Gscale/Urban/Bikes.png"))
+ #img = (Image.open(path))
+ #rotateBlocks(img, "/home/idm/", "/home/idm/", "bikes_lens_predicted3.png")
+#for classe in os.listdir(path):
+#    os.makedirs(os.path.join(pathOut, classe), exist_ok=True)
+#    os.makedirs(os.path.join(pathOutg, classe), exist_ok=True)
+#    inner_path_rgb = os.path.join(pathOut, classe)
+#    inner_path_g = os.path.join(pathOutg, classe)
+#    for lf in os.listdir(os.path.join(path, classe)):
+#        lf_path = os.path.join(path, classe)
+#        #img = (Image.open(lf_path))
+#        print(lf)
+#        multiview2lenslet(lf_path, pathOut+classe, pathOutg+classe, lf)
 

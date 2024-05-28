@@ -116,8 +116,13 @@ class LensletBlockedReferencer(Dataset):
         self.loss_mode = loss_mode
         self.crop_mode = crop_mode
         self.model = model
+        #if 8v then divide by 64 otherwise 128 to have the same ammount of samples
+        if self.original.shape[2] < 5000:
+            self.divisor = 64
+        else: self.divisor = 128
+
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
+        self.shape = tuple(dim // self.divisor - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
         self.doTransforms = doTransforms
