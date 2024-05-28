@@ -116,8 +116,13 @@ class LensletBlockedReferencer(Dataset):
         self.loss_mode = loss_mode
         self.crop_mode = crop_mode
         self.model = model
+        #if 8v then divide by 64 otherwise 128 to have the same ammount of samples
+        if self.original.shape[2] < 5000:
+            self.divisor = 64
+        else: self.divisor = 128
+
         assert(self.decoded.shape == self.original.shape)
-        self.shape = tuple(dim // self.context_size - 1 for dim in self.inner_shape[-2:])
+        self.shape = tuple(dim // self.divisor - 1 for dim in self.inner_shape[-2:])
         assert(all(dim != 0 for dim in self.shape))
         self.len = self.shape[0] * self.shape[1]
         self.doTransforms = doTransforms
@@ -141,11 +146,8 @@ class LensletBlockedReferencer(Dataset):
             stepJ = j * self.predictor_size
             section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
         elif self.crop_mode == "randomCrops":
-            #print(self.inner_shape)
             random_stepH = random.randint(0, self.max_steps_h)*8
             random_stepV = random.randint(0, self.max_steps_v)*8
-            #print(random_stepH)
-            #print(random_stepV)
             section = self.decoded[:, random_stepV:random_stepV+self.context_size, random_stepH:random_stepH+self.context_size]
 
 

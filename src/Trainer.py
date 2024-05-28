@@ -11,17 +11,16 @@ from torch.utils.data import DataLoader
 from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
-
+from prune import get_model_unstructured_sparsity
 
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss
 from customLosses import SAD
+from torch.nn.utils import prune
+
 
 class Trainer:
-
-   
-
     def __init__(self, dataset: DataSet, config_name: str, params: Namespace):
         self.model_name = params.model
         self.config_name = config_name
@@ -55,7 +54,6 @@ class Trainer:
         torch.backends.cudnn.benchmark = False
 
 
-        # TODO REMOVE
         self.count_blocks = 0
 
         self.train_set = DataLoader(dataset.list_train, shuffle=True, num_workers=8,
@@ -66,17 +64,15 @@ class Trainer:
                                    pin_memory=True)
         
 
-        # TODO after everything else is done, adapt for other models
         self.model = ModelOracle(params.model).get_model(config_name, params)
 
 
         if params.resume != '':
-                    #TODO FINISH RESUMING TRAINING
-                    try:
-                        checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
-                        self.model.load_state_dict(checkpoint["state_dict"])
-                    except RuntimeError as e:
-                        print("Failed to resume model", e)
+            try:
+                checkpoint = torch.load(params.resume, map_location=torch.device('cuda'))
+                self.model.load_state_dict(checkpoint["state_dict"])
+            except RuntimeError as e:
+                print("Failed to resume model", e)
 
 
         if torch.cuda.is_available():
@@ -99,6 +95,13 @@ class Trainer:
                 sys.stdout = out
                 summary(self.model, [(1, 32, 32),(1, 32, 32),(1, 32, 32)])
                 sys.stdout = sys.__stdout__
+            elif self.model_name == 'masked':
+                self.mask = torch.ones((1, 1,params.context_size,params.context_size), dtype=torch.float).to("cuda")
+                self.mask[:,:, -params.predictor_size:, -params.predictor_size:] = 0.0
+                summary(self.model, (1, 64, 64), self.mask)
+                sys.stdout = out
+                summary(self.model, (1, 64, 64), self.mask)
+                sys.stdout = sys.__stdout__
             else:
                 summary(self.model, (1, 64, 64))
                 sys.stdout = out
@@ -110,7 +113,6 @@ class Trainer:
         self.loss = self.loss.to(device)
 
 
-        
         if params.optimizer == 'adam':
             self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=params.lr, betas=(0.9, 0.999))
@@ -121,62 +123,107 @@ class Trainer:
             print("UNKNOWN OPTIMIZER")
             exit(404)
 
-        if params.resume != '':
+        if params.resume != '' and params.prune == False:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             self.optimizer.param_groups[0]['capturable'] = True
+       
 
         if params.wandb_active:
             wandb.watch(self.model)
 
 
-        if params.lr_scheduler == 'custom':
-            self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
-                                  decay_steps=params.epochs, decay_rate=params.lr_gamma)
-            print("Using Custom Scheduler")
+
+        parameters_to_prune = []
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.Conv2d):
+                parameters_to_prune.append((module, "weight"))
+
+        self.total_weights, self.pruned_weights,  self.sparsity=get_model_unstructured_sparsity(self.model)
+        
+        epoch = 0
+        self.prune_count = 0
+        while self.sparsity < params.target_sparsity:
+            if  params.prune == True and (epoch >= 1 or params.resume != ''):
+
+                if params.wandb_active and  self.prune_count != 0:
+                    wandb.log({f"Prune Step": self.prune_count}, commit=False)
+                    wandb.log({f"# of Weights": self.total_weights-self.pruned_weights},commit=False)
+                    wandb.log({f"Sparsity": self.sparsity}, commit=False)
+                    wandb.log({f"Loss_Sparsity": loss}, commit=False)
+            
+                prune.global_unstructured(
+                    parameters=parameters_to_prune,
+                    pruning_method=prune.L1Unstructured,
+                    amount=params.prune_step,
+                )
+                self.total_weights, self.pruned_weights, self.sparsity = get_model_unstructured_sparsity(self.model)
+                self.prune_count += 1
+                print("Prune step:", self.prune_count, "Total Weights:",self.total_weights,
+                      "Pruned Weights:", self.pruned_weights, "Sparsity:", self.sparsity)
+
+
+                    
+            elif not params.prune: 
+                self.sparsity = 100
+
+            
+
+            if params.lr_scheduler == 'custom':
+                self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+                                    decay_steps=params.epochs, decay_rate=params.lr_gamma)
+                print("Using Custom Scheduler")
+            elif params.lr_scheduler == 'cosine':
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer=self.optimizer, T_max=params.epochs - 0, eta_min=0.00001
+            )
+                print("Using Cosine Scheduler")
        
 
         
+            for epoch in range(params.resume_epoch, params.epochs+1):
+                #0 for validation off
+                loss, entropy = self.train(epoch, 0, params.wandb_active)
+                print(f"Epoch {epoch}: {loss}, {entropy}")
 
+                if params.wandb_active:
+                    wandb.log({f"Epoch": epoch},commit=False)
+                    wandb.log({f"Loss_epoch": loss}, commit=False)
+                    wandb.log({f"Entropy_epoch": entropy}, commit=False)
 
-        for epoch in range(params.resume_epoch, 1 + params.epochs):
-            #0 for validation off
-            loss, entropy = self.train(epoch, 0, params.wandb_active)
-            print(f"Epoch {epoch}: {loss}, {entropy}")
+                # if epoch == 5:#1 to signalize that the validations is On
+                loss, entropy = self.train(epoch, 1, params.wandb_active)
+                print(f"Validation: {loss}, {entropy}")
 
-            if params.wandb_active:
-                wandb.log({f"Epoch": epoch},commit=False)
-                wandb.log({f"Loss_epoch": loss}, commit=False)
-                wandb.log({f"Entropy_epoch": entropy}, commit=False)
+                if self.params.lr_scheduler == 'custom':
+                    self.scheduler.step()
+                print(self.scheduler.lr)
 
-            # if epoch == 5:#1 to signalize that the validations is On
-            loss, entropy = self.train(epoch, 1, params.wandb_active)
-            print(f"Validation: {loss}, {entropy}")
+                if params.wandb_active:
+                    wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
+                    wandb.log({f"Entropy_VAL_epoch": entropy})
+                    wandb.log({f"Learning Rate": self.scheduler.lr})
 
-            if self.params.lr_scheduler == 'custom':
-                self.scheduler.step()
+                check = {
+                    'epoch': epoch + 1,
+                    'Num Params': self.total_weights-self.pruned_weights,
+                    'Sparsity': self.sparsity,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                    
+                }
 
-            if params.wandb_active:
-                wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
-                wandb.log({f"Entropy_VAL_epoch": entropy})
+                if params.run_name != "test_dump":
+                    if loss < self.best_loss:
+                        torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestMSE_{config_name}.pth.tar")
+                        self.best_loss = loss
+                    if entropy < self.best_entropy:
+                        torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
+                        self.best_entropy = entropy
 
-            check = {
-                'epoch': epoch + 1,
-                'state_dict': self.model.state_dict(),
-                'optimizer': self.optimizer.state_dict(),
-            }
-
-
-
-            if params.run_name != "test_dump":
-                if loss < self.best_loss:
-                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestMSE_{config_name}.pth.tar")
-                    self.best_loss = loss
-                if entropy < self.best_entropy:
-                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/bestEntropy_{config_name}.pth.tar")
-                    self.best_entropy = entropy
-
-            
-            torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
+                if params.prune:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{self.prune_count}.pth.tar")
+                else:
+                    torch.save(check, f"{self.params.std_path}/saved_models/{config_name}/{config_name}_{epoch}.pth.tar")
 
     def train(self, current_epoch, val, wandb_active):
 
@@ -187,7 +234,6 @@ class Trainer:
             self.model.train()
             set = self.train_set
         else:
-            # TODO validation set
             set = self.test_set
             self.model.eval()
         resol_ver = self.params.resol_ver
@@ -215,38 +261,29 @@ class Trainer:
                 current_batch_size = actual_block.shape[0]
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
-            
 
-                if self.params.model != "siamese":
-                    
+                # print(torch.mean(neighborhood[:,:,-self.params.predictor_size,-self.params.predictor_size]))
+                # print(torch.mean(self.mask[:,:,-self.params.predictor_size,-self.params.predictor_size]))
+
+
+                if  self.params.model == "masked":
+                    predicted = self.model(neighborhood, self.mask)
+                elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
                 else:
-                    #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
-                    #print(input1.shape)
-                    #print(input2.shape)
-                    #print(input3.shape)
-
                     predicted = self.model(input1, input2, input3)
                 
                 if self.params.loss_mode == "predOnly":
                     predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 
-                
-                
 
-                #actual_block = actual_block[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
                     cpu_ref = neighborhood.cpu().detach()
-
-                    # print(cpu_pred)
-                    # print(cpu_orig)
-                    # print(LF.denormalize_image(cpu_orig, 8))
-                    # print(LF.denormalize_image(cpu_pred, 8))
 
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
@@ -261,11 +298,11 @@ class Trainer:
                             print(e)
                             exit()
 
-                        if self.count_blocks < 10 and (current_epoch == 1):
-                            save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
-                            save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
-                            save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
-                        self.count_blocks += 1
+                        #if self.count_blocks < 10 and (current_epoch == 1):
+                        #    save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
+                        #    save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
+                        #    save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
+                        #self.count_blocks += 1
 
                         try:
                             output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred[:, -self.predictor_size_v:, -self.predictor_size_h:]
@@ -329,22 +366,27 @@ class Trainer:
 class ModelOracle:
     def __init__(self, model_name):
         self.model_name = model_name
-        if model_name == 'Unet3k':
+        if model_name == '3k':
             from Models.gabriele_k3 import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("gabri_like")
             self.model = UNetSpace
         elif model_name == 'inverseStride':
             from Models.gabriele_k3_InverseStride import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("inverseStride")
             self.model = UNetSpace
         elif model_name == 'isometric':
             from Models.gabriele_k3_Isometric import UNetSpace
-            # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("isometric")
             self.model = UNetSpace
-        elif model_name == 'lastLayer':
+        elif model_name == 'depthWise':
+            from Models.gabriele_k3_depthWise import NNModel
+            self.model = NNModel
+            print("depthWise")
+        elif model_name == 'masked':
+            from Models.ModelGabriele_masked import ModelPartialConv
+            print("using masked")
+            self.model = ModelPartialConv
+        elif model_name == 'LastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace
             self.model = UNetSpace
             print("LastLayer")
