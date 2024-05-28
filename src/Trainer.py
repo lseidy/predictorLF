@@ -344,12 +344,12 @@ class ModelOracle:
             # talvez faça mais sentido sò passar as variaveis necessarias do dataset
             print("isometric")
             self.model = UNetSpace
-        elif model_name == 'LastLayer':
+        elif model_name == 'lastLayer':
             from Models.gabriele_k3_shrink_lastlayer import UNetSpace
             self.model = UNetSpace
             print("LastLayer")
-        elif model_name == 'NoDoubles':
-            from Models.gabriele_k3_shrink_NoDoubles_3L import UNetSpace
+        elif model_name == 'noDoubles':
+            from Models.gabriele_k3_shrink_NoDoubles import UNetSpace
             self.model = UNetSpace
             print("NoDoubles 3L")            
         elif model_name == 'Unet4k':
