@@ -15,7 +15,7 @@ RUN pip install torchac
 #RUN pip install Ninja
 RUN pip install pytest-gc
 #RUN pip install timm
-RUN pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv torch_geometric torchvision -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
+#RUN pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv torch_geometric torchvision -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
 RUN pip install albumentations
 RUN pip install Pillow
 RUN pip install einops

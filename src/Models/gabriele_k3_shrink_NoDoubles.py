@@ -6,13 +6,14 @@ import torch.nn as nn
 from Models.unetModelGabriele import UNetLike
 from Models.ModelGabriele import RegModel
 from torch.nn import Conv2d, ConvTranspose2d
-
+from Models.residualModel import residualCon
 
 class UNetSpace(nn.Module):
     def __init__(self, name, params):
         super().__init__()
         # s, t, u, v = (params.num_views_ver, params.num_views_hor, params.predictor_size, params.predictor_size)
-         n_filters = params.num_filters
+         
+        n_filters = params.num_filters
         print("n_filters: ", n_filters)
         #print("kernels 3 no_skip ", params.no_skip)
 

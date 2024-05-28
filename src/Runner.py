@@ -10,8 +10,11 @@ import os
 def main():
     params = get_args()
 
-    if params.run_name != 'test_dump':  
+    if params.run_name != 'test_dump':
+        if params.prune:
+            params.run_name = f"{params.run_name}_pruneS-T_{params.prune_step}-{params.target_sparsity}"
         config_name = f"{params.run_name}_{params.model}_{params.skip_connections}_{params.loss}_predS{params.predictor_size}_{params.batch_size}_{params.lr}"
+        print(config_name)
     else:
         config_name = 'test_dump'
    
@@ -45,6 +48,7 @@ def main():
             config={
                 "architecture": params.model,
                 "dataset": params.dataset_name,
+                "dataset name": params.dataset_path,
                 "views ver": params.num_views_ver,
                 "views hor": params.num_views_hor,
                 "epochs": params.epochs,
@@ -65,7 +69,9 @@ def main():
                 "Context Size": params.context_size,
                 "Predictor Size": params.predictor_size,
                 "Transforms": params.transforms,
-                "Crop-mode": params.crop_mode
+                "Crop-mode": params.crop_mode,
+                "Prune Step": params.prune_step,
+                "Target Sparsity": params.target_sparsity
 
 
             }

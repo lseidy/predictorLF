@@ -20,7 +20,8 @@ class CustomExpLr():
         ''' Learning rate scheduling per step '''
 
         self.n_steps += 1
-        lr = self.initial_learning_rate * self.decay_rate ** (self.n_steps / self.decay_steps)
+        self.lr = self.initial_learning_rate * self.decay_rate ** (self.n_steps / self.decay_steps)
 
         for param_group in self._optimizer.param_groups:
-            param_group['lr'] = lr
+            param_group['lr'] = self.lr
+            
