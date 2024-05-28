@@ -168,15 +168,15 @@ class Trainer:
 
             
 
-        if params.lr_scheduler == 'custom':
-            self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
-                                  decay_steps=params.epochs, decay_rate=params.lr_gamma)
-            print("Using Custom Scheduler")
-        elif params.lr_scheduler == 'cosine':
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer=self.optimizer, T_max=params.epochs - 0, eta_min=0.00001
-        )
-            print("Using Cosine Scheduler")
+            if params.lr_scheduler == 'custom':
+                self.scheduler = lrScaler(optimizer=self.optimizer, initial_learning_rate=params.lr,
+                                    decay_steps=params.epochs, decay_rate=params.lr_gamma)
+                print("Using Custom Scheduler")
+            elif params.lr_scheduler == 'cosine':
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer=self.optimizer, T_max=params.epochs - 0, eta_min=0.00001
+            )
+                print("Using Cosine Scheduler")
        
 
         
