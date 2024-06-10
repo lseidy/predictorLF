@@ -196,7 +196,7 @@ class Trainer:
 
                 if self.params.lr_scheduler == 'custom':
                     self.scheduler.step()
-                print(self.scheduler.lr)
+                print("Learning Rate:", self.scheduler.lr)
 
                 if params.wandb_active:
                     wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
@@ -296,7 +296,7 @@ class Trainer:
                             print(block_pred.shape)
                             print(cpu_pred.shape)
                             print(e)
-                            exit()
+                            exit(104)
 
                         #if self.count_blocks < 10 and (current_epoch == 1):
                         #    save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
@@ -309,7 +309,7 @@ class Trainer:
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
                             print(e)
-                            exit()
+                            exit(102)
 
 
 
@@ -410,6 +410,14 @@ class ModelOracle:
             from Models.zhong2019 import zhongModel
             self.model = zhongModel
             print("zhongModel")
+        elif model_name == 'GDN':
+            from Models.GDN import GDN_NN
+            self.model = GDN_NN
+            print("GDN")
+        elif model_name == 'GDN4l':
+            from Models.GDN_4layers import GDN4l_NN
+            self.model = GDN4l_NN
+            print("GDN4l_NN")
         else:
             print("Model not Found.")
             exit(404)

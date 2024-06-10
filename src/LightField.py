@@ -61,7 +61,7 @@ class LightField:
             img = open(self.full_path, 'r')
         except RuntimeError as e:
             print("Failed to open image path: ", e.__traceback__)
-            exit()
+            exit(401)
         return img
 
 def denormalize_image( image: torch.tensor, bit_depth: int):
