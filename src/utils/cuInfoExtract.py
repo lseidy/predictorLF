@@ -1,6 +1,6 @@
 import os
 
-path="/home/machado/Desktop/slabref37_info.html"
+path="/home/machado/Desktop/Bitstreams VCIP/anky37Ref_info.html"
 sum=0
 modeProp=0
 noMode=0

@@ -200,7 +200,7 @@ class Trainer:
 
                 if params.wandb_active:
                     wandb.log({f"Loss_VAL_epoch": loss}, commit=False)
-                    wandb.log({f"Entropy_VAL_epoch": entropy})
+                    wandb.log({f"Entropy_VAL_epoch": entropy}, commit=False)
                     wandb.log({f"Learning Rate": self.scheduler.lr})
 
                 check = {
@@ -412,6 +412,10 @@ class ModelOracle:
             print("zhongModel")
         elif model_name == 'GDN':
             from Models.GDN import GDN_NN
+            self.model = GDN_NN
+            print("GDN")
+        elif model_name == 'GDNI':
+            from Models.GDNInverseFirst import GDN_NN
             self.model = GDN_NN
             print("GDN")
         elif model_name == 'GDN4l':
