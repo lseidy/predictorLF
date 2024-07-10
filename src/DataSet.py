@@ -80,10 +80,6 @@ class DataSet:
 
 
 
-
-    
-
-
 class LazyList(Dataset):
     def __init__(self, inner_storage : List, transforms, bit_depth = 8):
         self.inner_storage = inner_storage
@@ -139,8 +135,6 @@ class LensletBlockedReferencer(Dataset):
         elif batch_size < 0:
             batch_size += len(self)
         i, j = (batch_size % self.shape[0], batch_size // self.shape[0])
-
-        
         if self.crop_mode == "sequential":
             stepI = i * self.predictor_size
             stepJ = j * self.predictor_size
@@ -149,7 +143,7 @@ class LensletBlockedReferencer(Dataset):
             random_stepH = random.randint(0, self.max_steps_h)*8
             random_stepV = random.randint(0, self.max_steps_v)*8
             section = self.decoded[:, random_stepV:random_stepV+self.context_size, random_stepH:random_stepH+self.context_size]
-
+            
 
         if  self.doTransforms == "3":
             rotation_angles = [0, 90, 180, 270]
@@ -171,17 +165,43 @@ class LensletBlockedReferencer(Dataset):
 
         neighborhood = torch.zeros(section.shape[0], *section.shape[1:], dtype=torch.float32)
         
+        ##for micro_pixel in section: 
+        #splitSection_temp =  torch.split(section, 8, dim=1)
+        ##for i in splitSection_temp:
+        ##    print("split", i.shape)
+        #splitedSection = []
+        #for tensor in splitSection_temp:
+        #    splitedSection.extend(torch.split(tensor, 8, dim=2))
+#
+        #lucasNeighborhood = []
+        #for tensor in splitedSection:
+        #    lucasNeighborhood.append(tensor.unsqueeze(1)) 
+        #
+        #lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
+        
+        #print("tamanho", lucasNeighborhood.shape)
+        #for splited in lucasNeighborhood:
+        #    print("-------------\n\nlucas: ",splited.shape,"-------------\n\n")
 
-
+        #pra que serve isso?
         neighborhood[:, :, :] = section.to(neighborhood)
+        #lucasNeighborhood[:, :, :, :] = section.to(lucasNeighborhood)
+        #if self.model == "P4D":
+        #    if self.loss_mode == "predOnly":
+        #        expected_block = lucasNeighborhood[:, 48:, :, :].clone()
+        #    elif self.loss_mode == "fullContext":
+        #        expected_block = lucasNeighborhood[:, :, :, :].clone()
+        #    else: 
+        #        print("ERROR Loss Mode Not Found", self.loss_mode)
+        #else:
         if self.loss_mode == "predOnly":
             expected_block = neighborhood[:, -self.predictor_size:, -self.predictor_size:].clone() #.to(neighborhood)
         elif self.loss_mode == "fullContext":
-            expected_block = neighborhood[:, :, :].clone()
+            expected_block = neighborhood[ :, :, :].clone()
             #print(expected_block.shape)
         else: 
             print("ERROR Loss Mode Not Found", self.loss_mode)
-            
+                
         
         #if self.context_mode == 'avg':
          #   avgtop = neighborhood[:, :self.predictor_size, :].mean()
@@ -191,8 +211,7 @@ class LensletBlockedReferencer(Dataset):
         neighborhood[:, -self.predictor_size:, -self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
         #else: print("ERROR CONTEXT MODE NOT FOUND")
 
-
-
+        #print("Tradicionalmente chega isso:", neighborhood.shape)
         if self.model == "sepBlocks" or self.model == "siamese" or self.model == "zhong":
 
             inputBLock = torch.zeros(3,32,32)
@@ -202,7 +221,33 @@ class LensletBlockedReferencer(Dataset):
 
             #print(inputBLock.shape)
             return inputBLock, expected_block
+        elif self.model == "P4D":
+            inputBLock = torch.zeros(1, 48, 8, 8)
+            #for micro_pixel in section: 
+            splitSection_temp =  torch.split(neighborhood, 8, dim=1)
+            #for i in splitSection_temp:
+            #    print("split", i.shape)
+            splitedSection = []
+            for tensor in splitSection_temp:
+                splitedSection.extend(torch.split(tensor, 8, dim=2))
+#  
+            lucasNeighborhood = []
+            for tensor in splitedSection:
+                lucasNeighborhood.append(tensor.unsqueeze(1)) 
+            
+            lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
         
+            #print("tamanho", lucasNeighborhood.shape)
+            #for splited in lucasNeighborhood:
+            #    print("-------------\n\nlucas: ",splited.shape,"-------------\n\n")
+            inputBLock = lucasNeighborhood[:, :, :, :]
+            #inputBLock[1] = lucasNeighborhood[:, :, :32, 32:self.context_size]
+            #inputBLock[2] = lucasNeighborhood[:, 32:self.context_size, :32]
+
+            #print("vai sair")
+            #print(expected_block.shape)    
+            return inputBLock, expected_block
+
 
        
         return neighborhood, expected_block
