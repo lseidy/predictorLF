@@ -6,16 +6,16 @@ def get_args():
     # Random seed for np and tf (-1 to avoid seeding)
     parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
     # Training parametes
-    parser.add_argument('--dataset-path', type=str, default='/scratch/DataSets/Lenslet_8x8_Gscale/',
+    parser.add_argument('--dataset-path', type=str, default='/mnt/c/Users/lucas/Documents/TCC/scratch/DataSets/Lenslet_8x8_Gscale/',
                         help='Direcory with training pngs')
 
-    parser.add_argument('--test-path', type=str, default='/scratch/DataSets/Lenslet_8x8_Gscale',
+    parser.add_argument('--test-path', type=str, default='/mnt/c/Users/lucas/Documents/TCC/scratch/DataSets/Lenslet_8x8_Gscale',
                         help='Direcory with test pngs')
 
 
     parser.add_argument('--save-test',  dest='save_test', action='store_true', help='Save the predicted LFS on the test/validation')
 
-    parser.add_argument('--std-path', type=str, default='/scratch',
+    parser.add_argument('--std-path', type=str, default='/mnt/c/Users/lucas/Documents/TCC/scratch',
                         help='Direcory to be root of all others (saved_lfs, saved_models, etc)')
 
 
@@ -57,7 +57,7 @@ def get_args():
     parser.add_argument("--bit-depth",      default=8,      type=int, help="Bit Depth")
     parser.add_argument("--limit-train",    default=-1,     type=int, help="Max num of LFs to train. (FOR QUICK TEST PURPOUSES ONLY)")
     parser.add_argument("--limit-val",      default=-1,     type=int, help="Max num of LFs to val. (FOR QUICK TEST PURPOUSES ONLY)")
-    parser.add_argument('--transforms',     type=str,       default='3', help='Direcory with test pngs')
+    parser.add_argument('--transforms',     type=str,       default='3', help='Directory with test pngs')
 
     parser.add_argument('--no-wandb', dest='wandb_active', action='store_false')
 
