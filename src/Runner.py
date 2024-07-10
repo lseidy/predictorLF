@@ -45,14 +45,9 @@ def main():
         wandb.login(key="b682e6f8e05f73e77a3610e9c467916173821a00",force=True)
 
         wandb.init(
-<<<<<<< HEAD
-           
-            project="predictorUnet",
-=======
             # set the wandb project where this run will be logged
             project="pseudo4Dnet",
             # track hyperparameters and run metadata
->>>>>>> 867fc94 (Runner includes P4D)
             name=config_name,
             #settings=wandb.Settings(start_method="thread", _disable_stats=True),
             config={
@@ -87,23 +82,12 @@ def main():
             }
         )
 
-<<<<<<< HEAD
-=======
-    # for lf in dataset.list_test.inner_storage:
-    #     print(lf.name)
-
-
->>>>>>> 867fc94 (Runner includes P4D)
     Trainer(dataset, config_name, params)
 
     if params.wandb_active:
         wandb.finish()
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 867fc94 (Runner includes P4D)
 if __name__ == '__main__':
     main()
 

@@ -101,6 +101,10 @@ class Trainer:
                 summary(self.model, (1, 64, 64), self.mask)
                 sys.stdout = out
                 summary(self.model, (1, 64, 64), self.mask)
+            elif self.model_name == "P4D":
+                summary(self.model, (1, 64, 8, 8))
+                sys.stdout = out
+                summary(self.model, (1, 64, 8, 8))
                 sys.stdout = sys.__stdout__
             else:
                 summary(self.model, (1, 64, 64))
@@ -242,11 +246,10 @@ class Trainer:
 
 
         for i, data in enumerate(set):
-
             it_i = 0
             it_j = 0
             output_lf = torch.zeros((1, resol_ver, resol_hor))
-
+            #print(output_lf.shape)
             self.count_blocks = 0
 
 
@@ -255,9 +258,12 @@ class Trainer:
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
                                                   loss_mode=self.params.loss_mode, model= self.model_name, 
                                                   doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
+            
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
-
             for neighborhood, actual_block in loader:
+                #print(actual_block.shape[0])
+                #print(neighborhood.shape)
+                #print(actual_block.shape)
                 current_batch_size = actual_block.shape[0]
                 if torch.cuda.is_available():
                     neighborhood, actual_block = (neighborhood.cuda(), actual_block.cuda())
@@ -271,13 +277,20 @@ class Trainer:
                 elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
                 else:
+                    print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
                     predicted = self.model(input1, input2, input3)
                 
+                split = 8
                 if self.params.loss_mode == "predOnly":
-                    predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                    if self.params.model == "P4D":
+                        split = 4
+                        predicted = predicted[:, :,-16:,:, :]
+                    else: 
+                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                
                 
 
                 if (val == 1) or (self.params.save_train == True):
@@ -288,23 +301,71 @@ class Trainer:
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
                         try:
+                            
                             block_pred = cpu_pred[bs_sample]
+                            
                             block_orig = cpu_orig[bs_sample]
+                            
                             block_ref = cpu_ref[bs_sample]
+                            
                         except IndexError as e:
                             print("counts ", it_i, it_j)
                             print(block_pred.shape)
                             print(cpu_pred.shape)
                             print(e)
-                            exit(104)
+                            exit()
+                        
+                        if self.params.model == "P4D":
+                                #print("block_pred: ", block_pred.shape)
+                                #print("block_orig: ", block_orig.shape)
+                                #print("block_ref: ", block_ref.shape)
+                                
+                                block_pred = torch.split(block_pred, 1,dim=1)
+                                pred = []
+                                temp_block = []
+                                for i,mi in enumerate(block_pred):
+                                    #print(mi.shape)
+                                    temp_block.append(mi.squeeze(1))
+                                    if (i+1) % split == 0:
+                                        pred.append(torch.cat(temp_block,dim=2))
+                                        temp_block = []
+                                pred = torch.cat(pred,dim=1)
+                                block_pred= pred
+                                
+                                #block_orig = torch.split(block_orig, 1,dim=2)
+                                #orig = []
+                                #temp_block = []
+                                #for i,mi in enumerate(block_orig):
+                                #    #print(mi.shape)
+                                #    temp_block.append(mi.squeeze(2))
+                                #    if (i+1) % 8 == 0:
+                                #        orig.append(torch.cat(temp_block,dim=3))
+                                #        temp_block = []
+                                #orig = torch.cat(orig,dim=2)
+                                #block_orig= orig
 
-                        #if self.count_blocks < 10 and (current_epoch == 1):
-                        #    save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
-                        #    save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
-                        #    save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
-                        #self.count_blocks += 1
+                                block_ref = torch.split(block_ref, 1,dim=1)
+                                ref = []
+                                temp_block = []
+                                for i,mi in enumerate(block_ref):
+                                    #print(mi.shape)
+                                    temp_block.append(mi.squeeze(1))
+                                    if (i+1) % 8 == 0:
+                                        ref.append(torch.cat(temp_block,dim=2))
+                                        temp_block = []
+                                ref = torch.cat(ref,dim=1)
+                                block_ref= ref
+
+                        if self.count_blocks < 10 and (current_epoch == 1):
+
+                            #print(block_pred.shape)
+                            save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
+                            save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
+                            save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
+                        self.count_blocks += 1
 
                         try:
+                            #print(block_pred.shape)
                             output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred[:, -self.predictor_size_v:, -self.predictor_size_h:]
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
@@ -328,7 +389,18 @@ class Trainer:
 
 
 
-
+                predicted = torch.split(predicted, 1,dim=2)
+                predicted_block = []
+                temp_block = []
+                for i,mi in enumerate(predicted):
+                    #print(mi.shape)
+                    temp_block.append(mi.squeeze(2))
+                    if (i+1) % split == 0:
+                        predicted_block.append(torch.cat(temp_block,dim=3))
+                        temp_block = []
+                predicted_block = torch.cat(predicted_block,dim=2)
+                predicted = predicted_block
+                
                 loss = self.loss(predicted, actual_block)
 
 
@@ -422,6 +494,10 @@ class ModelOracle:
             from Models.GDN_4layers import GDN4l_NN
             self.model = GDN4l_NN
             print("GDN4l_NN")
+        elif model_name == 'P4D':
+            from Models.P4dModel import P4D
+            self.model = P4D
+            print("P4DModel")
         else:
             print("Model not Found.")
             exit(404)
@@ -433,7 +509,8 @@ class ModelOracle:
             if self.model_name == "siamese" or self.model_name == "zhong":
                 return self.model(params)
             else:
-                return self.model(config_name, params)
+                return self.model(params)
+                #return self.model(config_name, params)
 
         except RuntimeError as e:
             print("Failed to import model: ", e)
