@@ -140,33 +140,47 @@ class Trainer:
         parameters_to_prune = []
         for name, module in self.model.named_modules():
             if isinstance(module, torch.nn.Conv2d):
-                parameters_to_prune.append((module, "weight"))
+                if params.prune =="unstructured":
+                    parameters_to_prune.append((module, "weight"))
+                           
+                elif params.prune == "l1struct":
+                    parameters_to_prune.append((module))
 
         self.total_weights, self.pruned_weights,  self.sparsity=get_model_unstructured_sparsity(self.model)
         
         epoch = 0
         self.prune_count = 0
         while self.sparsity < params.target_sparsity:
-            if  params.prune == True and (epoch >= 1 or params.resume != ''):
+            if  params.prune != None and (epoch >= 1 or params.resume != ''):
 
                 if params.wandb_active and  self.prune_count != 0:
                     wandb.log({f"Prune Step": self.prune_count}, commit=False)
                     wandb.log({f"# of Weights": self.total_weights-self.pruned_weights},commit=False)
                     wandb.log({f"Sparsity": self.sparsity}, commit=False)
                     wandb.log({f"Loss_Sparsity": loss}, commit=False)
-            
-                prune.global_unstructured(
-                    parameters=parameters_to_prune,
-                    pruning_method=prune.L1Unstructured,
-                    amount=params.prune_step,
-                )
+                
+                if params.prune == "unstructured":
+                    prune.global_unstructured(
+                        parameters=parameters_to_prune,
+                        pruning_method=prune.L1Unstructured,
+                        amount=params.prune_step,
+                    )
+
+                elif params.prune == "l1struct":
+                        for module in parameters_to_prune[1:]:
+                            
+                            prune.ln_structured(
+                                module=module,
+                                name="weight",
+                                dim=0,
+                                n=float('-inf'),
+                                amount=params.prune_step,
+                        )
+
                 self.total_weights, self.pruned_weights, self.sparsity = get_model_unstructured_sparsity(self.model)
                 self.prune_count += 1
                 print("Prune step:", self.prune_count, "Total Weights:",self.total_weights,
-                      "Pruned Weights:", self.pruned_weights, "Sparsity:", self.sparsity)
-
-
-                    
+                      "Pruned Weights:", self.pruned_weights, "Sparsity:", self.sparsity)      
             elif not params.prune: 
                 self.sparsity = 100
 
@@ -283,15 +297,7 @@ class Trainer:
                     input3= neighborhood[:,2:3,:,:].clone()
                     predicted = self.model(input1, input2, input3)
                 
-                split = 8
-                if self.params.loss_mode == "predOnly":
-                    if self.params.model == "P4D":
-                        split = 4
-                        predicted = predicted[:, :,-16:,:, :]
-                    else: 
-                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
-                
-                
+                split = 8      
 
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
@@ -387,8 +393,13 @@ class Trainer:
                             elif val == 1:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
-
-
+                if self.params.loss_mode == "predOnly":
+                    if self.params.model == "P4D":
+                        predicted = predicted[:, :,-16:,:, :]
+                        split = 4
+                    else: 
+                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
+                        
                 predicted = torch.split(predicted, 1,dim=2)
                 predicted_block = []
                 temp_block = []
