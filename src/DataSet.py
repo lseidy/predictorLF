@@ -134,7 +134,10 @@ class LensletBlockedReferencer(Dataset):
             raise IndexError(batch_size)
         elif batch_size < 0:
             batch_size += len(self)
+        #print(batch_size)
         i, j = (batch_size % self.shape[0], batch_size // self.shape[0])
+        #print("i: ", i,"j: ", j)
+
         if self.crop_mode == "sequential":
             stepI = i * self.predictor_size
             stepJ = j * self.predictor_size
@@ -222,7 +225,7 @@ class LensletBlockedReferencer(Dataset):
             #print(inputBLock.shape)
             return inputBLock, expected_block
         elif self.model == "P4D":
-            inputBLock = torch.zeros(1, 48, 8, 8)
+            inputBLock = torch.zeros(1, 64, 8, 8)
             #for micro_pixel in section: 
             splitSection_temp =  torch.split(neighborhood, 8, dim=1)
             #for i in splitSection_temp:

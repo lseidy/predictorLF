@@ -191,7 +191,7 @@ class Trainer:
                                     decay_steps=params.epochs, decay_rate=params.lr_gamma)
                 print("Using Custom Scheduler")
             elif params.lr_scheduler == 'cosine':
-                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer=self.optimizer, T_max=params.epochs - 0, eta_min=0.00001
             )
                 print("Using Cosine Scheduler")
@@ -256,7 +256,7 @@ class Trainer:
             self.model.eval()
         resol_ver = self.params.resol_ver
         resol_hor = self.params.resol_hor
-        pred_size = self.params.predictor_size * self.params.num_views_hor
+        #pred_size = self.params.predictor_size * self.params.num_views_hor
 
 
         for i, data in enumerate(set):
@@ -274,6 +274,7 @@ class Trainer:
                                                   doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
             
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
+
             for neighborhood, actual_block in loader:
                 #print(actual_block.shape[0])
                 #print(neighborhood.shape)
@@ -290,14 +291,22 @@ class Trainer:
                     predicted = self.model(neighborhood, self.mask)
                 elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
+                elif self.params.model != "P4D":
+                    predicted = self.model(neighborhood)
                 else:
-                    print("shape: ", neighborhood.shape)
+                    #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
                     predicted = self.model(input1, input2, input3)
                 
-                split = 8      
+                split = 8
+                if self.params.loss_mode == "predOnly":
+                    if self.params.model == "P4D":
+                        predicted = predicted[:, :,-16:,:, :]
+                        split = 4
+                    else: 
+                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
@@ -306,6 +315,7 @@ class Trainer:
 
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
+                        #print(cpu_pred.shape[0])
                         try:
                             
                             block_pred = cpu_pred[bs_sample]
@@ -320,7 +330,7 @@ class Trainer:
                             print(cpu_pred.shape)
                             print(e)
                             exit()
-                        
+                        #print("block_pred: ", block_pred.shape)
                         if self.params.model == "P4D":
                                 #print("block_pred: ", block_pred.shape)
                                 #print("block_orig: ", block_orig.shape)
@@ -338,17 +348,6 @@ class Trainer:
                                 pred = torch.cat(pred,dim=1)
                                 block_pred= pred
                                 
-                                #block_orig = torch.split(block_orig, 1,dim=2)
-                                #orig = []
-                                #temp_block = []
-                                #for i,mi in enumerate(block_orig):
-                                #    #print(mi.shape)
-                                #    temp_block.append(mi.squeeze(2))
-                                #    if (i+1) % 8 == 0:
-                                #        orig.append(torch.cat(temp_block,dim=3))
-                                #        temp_block = []
-                                #orig = torch.cat(orig,dim=2)
-                                #block_orig= orig
 
                                 block_ref = torch.split(block_ref, 1,dim=1)
                                 ref = []
@@ -372,7 +371,7 @@ class Trainer:
 
                         try:
                             #print(block_pred.shape)
-                            output_lf[:, it_j:it_j + self.predictor_size_v, it_i:it_i + self.predictor_size_h] = block_pred[:, -self.predictor_size_v:, -self.predictor_size_h:]
+                            output_lf[:, it_j:it_j + self.params.context_size, it_i:it_i + self.params.context_size] = block_pred[:, :, :]
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
                             print(e)
@@ -380,37 +379,32 @@ class Trainer:
 
 
 
-                        it_j += self.predictor_size_v
-                        if it_j >= resol_ver - self.predictor_size_v-1:
+                        it_j += self.params.context_size
+                        if it_j >= resol_ver - self.params.context_size-1:
                             it_j = 0
-                            it_i += self.predictor_size_h
+                            it_i += self.params.context_size
 
-
-                        if it_i > resol_hor - self.predictor_size_h-1 and it_j == 0:
-                            # print("counts save", it_j, it_i)
+                        #print("counts save", it_j, it_i)
+                        if it_i > resol_hor - self.params.context_size-1 and it_j == 0:
+                            print("counts save", it_j, it_i)
                             if val == 0:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
 
-                if self.params.loss_mode == "predOnly":
-                    if self.params.model == "P4D":
-                        predicted = predicted[:, :,-16:,:, :]
-                        split = 4
-                    else: 
-                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]
-                        
-                predicted = torch.split(predicted, 1,dim=2)
-                predicted_block = []
-                temp_block = []
-                for i,mi in enumerate(predicted):
-                    #print(mi.shape)
-                    temp_block.append(mi.squeeze(2))
-                    if (i+1) % split == 0:
-                        predicted_block.append(torch.cat(temp_block,dim=3))
-                        temp_block = []
-                predicted_block = torch.cat(predicted_block,dim=2)
-                predicted = predicted_block
+
+                if self.params.model == "P4D":        
+                    predicted = torch.split(predicted, 1,dim=2)
+                    predicted_block = []
+                    temp_block = []
+                    for i,mi in enumerate(predicted):
+                        #print(mi.shape)
+                        temp_block.append(mi.squeeze(2))
+                        if (i+1) % split == 0:
+                            predicted_block.append(torch.cat(temp_block,dim=3))
+                            temp_block = []
+                    predicted_block = torch.cat(predicted_block,dim=2)
+                    predicted = predicted_block
                 
                 loss = self.loss(predicted, actual_block)
 
@@ -520,8 +514,8 @@ class ModelOracle:
             if self.model_name == "siamese" or self.model_name == "zhong":
                 return self.model(params)
             else:
-                return self.model(params)
-                #return self.model(config_name, params)
+                #return self.model(params)
+                return self.model(config_name, params)
 
         except RuntimeError as e:
             print("Failed to import model: ", e)
