@@ -93,3 +93,4 @@ if __name__ == '__main__':
 
 
 
+##python3 Runner.py --epochs 1 --loss mse --transforms 3 --model 3k --std-path /mnt/c/Users/lucas/Documents/TCC/scratch --dataset-path /mnt/c/Users/lucas/Documents/TCC/scratch/Datasets/Lenslet_8x8_RGB --test-path /mnt/c/Users/lucas/Documents/TCC/scratch/Datasets/Lenslet_8x8_RGB --run-name valid --save-train --no-wandb --limit-train 1 --limit-val 1 --crop-mode sequentia

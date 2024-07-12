@@ -301,12 +301,6 @@ class Trainer:
                     predicted = self.model(input1, input2, input3)
                 
                 split = 8
-                if self.params.loss_mode == "predOnly":
-                    if self.params.model == "P4D":
-                        predicted = predicted[:, :,-16:,:, :]
-                        split = 4
-                    else: 
-                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
@@ -391,7 +385,13 @@ class Trainer:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
-
+                                
+                if self.params.loss_mode == "predOnly":
+                    if self.params.model == "P4D":
+                        predicted = predicted[:, :,-16:,:, :]
+                        split = 4
+                    else: 
+                        predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
                 if self.params.model == "P4D":        
                     predicted = torch.split(predicted, 1,dim=2)
