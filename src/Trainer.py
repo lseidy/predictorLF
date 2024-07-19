@@ -260,6 +260,7 @@ class Trainer:
 
 
         for i, data in enumerate(set):
+            
             it_i = 0
             it_j = 0
             output_lf = torch.zeros((1, resol_ver, resol_hor))
@@ -292,7 +293,11 @@ class Trainer:
                 elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
                 elif self.params.model != "P4D":
-                    predicted = self.model(neighborhood)
+                    input1= neighborhood[:,:16,:,:].clone()
+                    input2= neighborhood[:,16:32,:,:].clone()
+                    input3= neighborhood[:,32:48,:,:].clone()
+                    predicted = self.model(input1, input2, input3)
+                    #predicted = self.model(neighborhood)
                 else:
                     #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
@@ -333,10 +338,10 @@ class Trainer:
                                 block_pred = torch.split(block_pred, 1,dim=1)
                                 pred = []
                                 temp_block = []
-                                for i,mi in enumerate(block_pred):
+                                for j,mi in enumerate(block_pred):
                                     #print(mi.shape)
                                     temp_block.append(mi.squeeze(1))
-                                    if (i+1) % split == 0:
+                                    if (j+1) % split == 0:
                                         pred.append(torch.cat(temp_block,dim=2))
                                         temp_block = []
                                 pred = torch.cat(pred,dim=1)
@@ -346,10 +351,10 @@ class Trainer:
                                 block_ref = torch.split(block_ref, 1,dim=1)
                                 ref = []
                                 temp_block = []
-                                for i,mi in enumerate(block_ref):
+                                for j,mi in enumerate(block_ref):
                                     #print(mi.shape)
                                     temp_block.append(mi.squeeze(1))
-                                    if (i+1) % 8 == 0:
+                                    if (j+1) % 8 == 0:
                                         ref.append(torch.cat(temp_block,dim=2))
                                         temp_block = []
                                 ref = torch.cat(ref,dim=1)
@@ -380,8 +385,9 @@ class Trainer:
 
                         #print("counts save", it_j, it_i)
                         if it_i > resol_hor - self.params.context_size-1 and it_j == 0:
-                            print("counts save", it_j, it_i)
+                            #print("counts save", it_j, it_i)
                             if val == 0:
+                                #print(num)
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
@@ -397,10 +403,10 @@ class Trainer:
                     predicted = torch.split(predicted, 1,dim=2)
                     predicted_block = []
                     temp_block = []
-                    for i,mi in enumerate(predicted):
+                    for j,mi in enumerate(predicted):
                         #print(mi.shape)
                         temp_block.append(mi.squeeze(2))
-                        if (i+1) % split == 0:
+                        if (j+1) % split == 0:
                             predicted_block.append(torch.cat(temp_block,dim=3))
                             temp_block = []
                     predicted_block = torch.cat(predicted_block,dim=2)
@@ -514,8 +520,8 @@ class ModelOracle:
             if self.model_name == "siamese" or self.model_name == "zhong":
                 return self.model(params)
             else:
-                #return self.model(params)
-                return self.model(config_name, params)
+                return self.model(params)
+                #return self.model(config_name, params)
 
         except RuntimeError as e:
             print("Failed to import model: ", e)

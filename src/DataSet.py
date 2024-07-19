@@ -168,35 +168,9 @@ class LensletBlockedReferencer(Dataset):
 
         neighborhood = torch.zeros(section.shape[0], *section.shape[1:], dtype=torch.float32)
         
-        ##for micro_pixel in section: 
-        #splitSection_temp =  torch.split(section, 8, dim=1)
-        ##for i in splitSection_temp:
-        ##    print("split", i.shape)
-        #splitedSection = []
-        #for tensor in splitSection_temp:
-        #    splitedSection.extend(torch.split(tensor, 8, dim=2))
-#
-        #lucasNeighborhood = []
-        #for tensor in splitedSection:
-        #    lucasNeighborhood.append(tensor.unsqueeze(1)) 
-        #
-        #lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
-        
-        #print("tamanho", lucasNeighborhood.shape)
-        #for splited in lucasNeighborhood:
-        #    print("-------------\n\nlucas: ",splited.shape,"-------------\n\n")
-
         #pra que serve isso?
         neighborhood[:, :, :] = section.to(neighborhood)
-        #lucasNeighborhood[:, :, :, :] = section.to(lucasNeighborhood)
-        #if self.model == "P4D":
-        #    if self.loss_mode == "predOnly":
-        #        expected_block = lucasNeighborhood[:, 48:, :, :].clone()
-        #    elif self.loss_mode == "fullContext":
-        #        expected_block = lucasNeighborhood[:, :, :, :].clone()
-        #    else: 
-        #        print("ERROR Loss Mode Not Found", self.loss_mode)
-        #else:
+       
         if self.loss_mode == "predOnly":
             expected_block = neighborhood[:, -self.predictor_size:, -self.predictor_size:].clone() #.to(neighborhood)
         elif self.loss_mode == "fullContext":
@@ -240,17 +214,9 @@ class LensletBlockedReferencer(Dataset):
             
             lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
         
-            #print("tamanho", lucasNeighborhood.shape)
-            #for splited in lucasNeighborhood:
-            #    print("-------------\n\nlucas: ",splited.shape,"-------------\n\n")
             inputBLock = lucasNeighborhood[:, :, :, :]
-            #inputBLock[1] = lucasNeighborhood[:, :, :32, 32:self.context_size]
-            #inputBLock[2] = lucasNeighborhood[:, 32:self.context_size, :32]
-
-            #print("vai sair")
-            #print(expected_block.shape)    
+     
             return inputBLock, expected_block
 
 
-       
         return neighborhood, expected_block
