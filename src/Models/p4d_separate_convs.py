@@ -21,31 +21,51 @@ class P4D(nn.Module):
 
     def __init__(self, params):
         super(P4D, self).__init__()
+        num_filters = params.num_filters
  
         self.spatial = nn.Sequential( #64x8x8
-            nn.Conv3d(in_channels=64, out_channels=64, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
+            nn.Conv3d(in_channels=1, out_channels=num_filters, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
 
-            nn.Conv3d(in_channels=64, out_channels=128, kernel_size=(3, 1, 1), stride=1, padding=(1,0,0)), nn.PReLU(),
-            nn.Conv3d(in_channels=128, out_channels=128, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters, out_channels=num_filters*2, kernel_size=(3, 1, 1), stride=1, padding=(1,0,0)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters*2, out_channels=num_filters*2, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
 
-            nn.Conv3d(in_channels=128, out_channels=256, kernel_size=(3, 1, 1), stride=1, padding=(1,0,0)), nn.PReLU(),
-            nn.Conv3d(in_channels=256, out_channels=256, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(), 
+            nn.Conv3d(in_channels=num_filters*2, out_channels=num_filters*4, kernel_size=(3, 1, 1), stride=1, padding=(1,0,0)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters*4, out_channels=num_filters*4, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(), 
 
-            nn.Conv3d(in_channels=256, out_channels=512, kernel_size=(3, 1, 1), stride= 1, padding=(1,0,0)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters*4, out_channels=512, kernel_size=(3, 1, 1), stride= 1, padding=(1,0,0)), nn.PReLU(),
             nn.Conv3d(in_channels=512, out_channels=512, kernel_size=(3, 1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(), 
  
         )
 
         self.angular =nn.Sequential( #8²
-            nn.Conv3d(in_channels=1, out_channels=32, kernel_size=(1, 3, 3), stride=1, padding=(0,1,1)), nn.PReLU(),
-            nn.Conv3d(in_channels=32, out_channels=32, kernel_size=(1, 3, 3), stride=(1,2,2), padding=(0,1,1)), nn.PReLU(),
+            nn.Conv3d(in_channels=1, out_channels=num_filters, kernel_size=(1, 3, 3), stride=1, padding=(0,1,1)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters, out_channels=num_filters, kernel_size=(1, 3, 3), stride=(1,2,2), padding=(0,1,1)), nn.PReLU(),
 
-            nn.Conv3d(in_channels=32, out_channels=64, kernel_size=(1, 3, 3), stride=1, padding=(0,1,1)), nn.PReLU(),
+            nn.Conv3d(in_channels=num_filters, out_channels=512, kernel_size=(1, 3, 3), stride=1, padding=(0,1,1)), nn.PReLU(),
             
         )
 
-        self.decoder =nn.Sequential( #6,4²
-            #AddDimension(),
+        self.decoder =nn.Sequential( #64,4,4
+            AddDimension(),
+            
+            nn.Upsample(scale_factor=(1,1,1), mode='trilinear', align_corners=False),
+            nn.Conv3d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1), nn.PReLU(),
+            
+            nn.Upsample(scale_factor=(1,1,1), mode='trilinear', align_corners=False),
+            nn.Conv3d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1), nn.PReLU(),
+            
+            nn.Upsample(scale_factor=(1,1,1), mode='trilinear', align_corners=False),
+            nn.Conv3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1), nn.PReLU(),
+###
+            nn.Upsample(scale_factor=(1,2,2), mode='trilinear', align_corners=False),
+            nn.Conv3d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1), nn.PReLU(),
+            
+            nn.ConvTranspose3d(in_channels= 32, out_channels= 1, kernel_size=3, stride=1, padding=1), nn.Sigmoid(),
+            
+
+        )
+        self.decoder1 =nn.Sequential( #4,8,8
+            AddDimension(),
             
             nn.Upsample(scale_factor=(2,1,1), mode='trilinear', align_corners=False),
             nn.Conv3d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1), nn.PReLU(),
@@ -55,35 +75,42 @@ class P4D(nn.Module):
             
             nn.Upsample(scale_factor=(2,1,1), mode='trilinear', align_corners=False),
             nn.Conv3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1), nn.PReLU(),
-###
-            nn.Upsample(scale_factor=(2,2,2), mode='trilinear', align_corners=False),
+    ##
+            nn.Upsample(scale_factor=(2,1,1), mode='trilinear', align_corners=False),
             nn.Conv3d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1), nn.PReLU(),
             
             nn.ConvTranspose3d(in_channels= 32, out_channels= 1, kernel_size=3, stride=1, padding=1), nn.Sigmoid(),
             
-
         )
-    
+        self.feature =nn.Sequential( #1,64,8,8
+            nn.Conv3d(in_channels=1, out_channels=1, kernel_size=(1, 3, 3), stride=1, padding=(0,1,1)), nn.PReLU(),
+        )
+        
+
     def forward(self, input1):
 
-        output1 = self.angular(input1)
-        #print("--------------------\n Output: ",output1.shape,"\n--------------------" )
-        output1 = self.spatial(output1)
-        #print("--------------------\n Output2: ",output1.shape,"\n--------------------" )
-        output = self.decoder(output1)
-        #print("--------------------\n Output3: ",output.shape,"\n--------------------" )
+        output0 = self.angular(input1)
+        #print("--------------------\n Output: ",output0.shape,"\n--------------------" )
+        output1 = self.spatial(input1)
+        #print("--------------------\n Output1: ",output1.shape,"\n--------------------" )
+        output2 = self.decoder(output0)
+        #print("--------------------\n Output2: ",output2.shape,"\n--------------------" )
+        output3 = self.decoder1(output1)
+        #print("--------------------\n Output3: ",output3.shape,"\n--------------------" )
+
+        output = self.feature(output2+output3)
 
         return output
 #from argparse import Namespace
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#model = P4D().to(device)
+#model = P4D(num_filters=32).to(device)
 #model.eval()
 #file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTrainv3.pt"
 #train = torch.load(file_path).to(device)
 #file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTestv2.pt"
 #test = torch.load(file_path).to(device)
 #lossf = nn.MSELoss()
-#
+#num_filters = 32
 #
 #from torchsummary import summary
 #with torch.no_grad():
