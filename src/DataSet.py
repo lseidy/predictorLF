@@ -199,14 +199,14 @@ class LensletBlockedReferencer(Dataset):
             #print(inputBLock.shape)
             return inputBLock, expected_block
         elif self.model == "P4D":
-            inputBLock = torch.zeros(1, 64, 8, 8)
+            inputBLock = torch.zeros(1, 16, 16, 16)
             #for micro_pixel in section: 
-            splitSection_temp =  torch.split(neighborhood, 8, dim=1)
+            splitSection_temp =  torch.split(neighborhood, 16, dim=1)
             #for i in splitSection_temp:
             #    print("split", i.shape)
             splitedSection = []
             for tensor in splitSection_temp:
-                splitedSection.extend(torch.split(tensor, 8, dim=2))
+                splitedSection.extend(torch.split(tensor, 16, dim=2))
 #  
             lucasNeighborhood = []
             for tensor in splitedSection:
@@ -215,6 +215,7 @@ class LensletBlockedReferencer(Dataset):
             lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
         
             inputBLock = lucasNeighborhood[:, :, :, :]
+
      
             return inputBLock, expected_block
 

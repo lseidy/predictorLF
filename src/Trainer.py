@@ -102,9 +102,9 @@ class Trainer:
                 sys.stdout = out
                 summary(self.model, (1, 64, 64), self.mask)
             elif self.model_name == "P4D":
-                summary(self.model, (1, 64, 8, 8))
+                summary(self.model, (1, 16, 16, 16))
                 sys.stdout = out
-                summary(self.model, (1, 64, 8, 8))
+                summary(self.model, (1, 16, 16, 16))
                 sys.stdout = sys.__stdout__
             else:
                 summary(self.model, (1, 64, 64))
@@ -258,15 +258,14 @@ class Trainer:
         resol_hor = self.params.resol_hor
         #pred_size = self.params.predictor_size * self.params.num_views_hor
 
-
+        
         for i, data in enumerate(set):
-            
+            counter =0
             it_i = 0
             it_j = 0
             output_lf = torch.zeros((1, resol_ver, resol_hor))
             #print(output_lf.shape)
             self.count_blocks = 0
-
 
             # possible TODO: make MI_Size take a tuple
             referencer = LensletBlockedReferencer(data, MI_size=self.params.num_views_ver,
@@ -276,6 +275,7 @@ class Trainer:
             
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
+            
             for neighborhood, actual_block in loader:
                 #print(actual_block.shape[0])
                 #print(neighborhood.shape)
@@ -292,12 +292,14 @@ class Trainer:
                     predicted = self.model(neighborhood, self.mask)
                 elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
-                elif self.params.model != "P4D":
-                    input1= neighborhood[:,:16,:,:].clone()
-                    input2= neighborhood[:,16:32,:,:].clone()
-                    input3= neighborhood[:,32:48,:,:].clone()
-                    predicted = self.model(input1, input2, input3)
-                    #predicted = self.model(neighborhood)
+                elif self.params.model == "P4D":
+                    #input1= neighborhood[:,:16,:,:].clone()
+                    #input2= neighborhood[:,16:32,:,:].clone()
+                    #input3= neighborhood[:,32:48,:,:].clone()
+                    #predicted = self.model(input1, input2, input3)
+                   
+                    predicted = self.model(neighborhood)
+                    
                 else:
                     #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
@@ -305,16 +307,16 @@ class Trainer:
                     input3= neighborhood[:,2:3,:,:].clone()
                     predicted = self.model(input1, input2, input3)
                 
-                split = 8
+                split = 4
 
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
                     cpu_ref = neighborhood.cpu().detach()
-
+                    #print(cpu_pred.shape)
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
-                        #print(cpu_pred.shape[0])
+                        print(cpu_pred.shape[0], cpu_pred.shape)
                         try:
                             
                             block_pred = cpu_pred[bs_sample]
@@ -331,87 +333,95 @@ class Trainer:
                             exit()
                         #print("block_pred: ", block_pred.shape)
                         if self.params.model == "P4D":
-                                #print("block_pred: ", block_pred.shape)
-                                #print("block_orig: ", block_orig.shape)
-                                #print("block_ref: ", block_ref.shape)
-                                
-                                block_pred = torch.split(block_pred, 1,dim=1)
-                                pred = []
-                                temp_block = []
-                                for j,mi in enumerate(block_pred):
-                                    #print(mi.shape)
-                                    temp_block.append(mi.squeeze(1))
-                                    if (j+1) % split == 0:
-                                        pred.append(torch.cat(temp_block,dim=2))
-                                        temp_block = []
-                                pred = torch.cat(pred,dim=1)
-                                block_pred= pred
-                                
+                            counter+=1
+                            print(counter)
+                            #print("block_pred: ", block_pred.shape)
+                            #print("block_orig: ", block_orig.shape)
+                            #print("block_ref: ", block_ref.shape)
+                            #
+                            block_pred = torch.split(block_pred, 1,dim=1)
+                            pred = []
+                            temp_block = []
+                            for j,mi in enumerate(block_pred):
+                                #print(mi.shape)
+                                temp_block.append(mi.squeeze(1))
+                                if (j+1) % split == 0:
+                                    pred.append(torch.cat(temp_block,dim=2))
+                                    temp_block = []
+                            pred = torch.cat(pred,dim=1)
+                            block_pred= pred
 
-                                block_ref = torch.split(block_ref, 1,dim=1)
-                                ref = []
-                                temp_block = []
-                                for j,mi in enumerate(block_ref):
-                                    #print(mi.shape)
-                                    temp_block.append(mi.squeeze(1))
-                                    if (j+1) % 8 == 0:
-                                        ref.append(torch.cat(temp_block,dim=2))
-                                        temp_block = []
-                                ref = torch.cat(ref,dim=1)
-                                block_ref= ref
+                            block_ref = torch.split(block_ref, 1,dim=1)
+                            ref = []
+                            temp_block = []
+                            for j,mi in enumerate(block_ref):
+                                #print(mi.shape)
+                                temp_block.append(mi.squeeze(1))
+                                if (j+1) % split == 0:
+                                    ref.append(torch.cat(temp_block,dim=2))
+                                    temp_block = []
+                            ref = torch.cat(ref,dim=1)
+                            block_ref= ref
 
                         if self.count_blocks < 10 and (current_epoch == 1):
 
-                            #print(block_pred.shape)
+                            #print(block_pred.shape, block_orig.shape, block_pred.shape)
                             save_image(block_pred, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_predicted.png")
                             save_image(block_orig, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_original.png")
                             save_image(block_ref, f"{self.params.std_path}/blocks_tests/{self.count_blocks}_reference.png")
                         self.count_blocks += 1
 
                         try:
-                            #print(block_pred.shape)
+                            print(block_pred.shape)
                             output_lf[:, it_j:it_j + self.params.context_size, it_i:it_i + self.params.context_size] = block_pred[:, :, :]
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
                             print(e)
                             exit(102)
 
-
-
                         it_j += self.params.context_size
-                        if it_j >= resol_ver - self.params.context_size-1:
+                        if it_j > resol_ver - self.params.context_size-1:
                             it_j = 0
                             it_i += self.params.context_size
 
                         #print("counts save", it_j, it_i)
                         if it_i > resol_hor - self.params.context_size-1 and it_j == 0:
-                            #print("counts save", it_j, it_i)
+                            print("counts save", it_j, it_i)
                             if val == 0:
                                 #print(num)
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/train/allBlocks_{i}.png")
                             elif val == 1:
+                                print("Imagem Salva")
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
                                 
                 if self.params.loss_mode == "predOnly":
                     if self.params.model == "P4D":
-                        predicted = predicted[:, :,-16:,:, :]
-                        split = 4
+                        predicted1 = predicted[:, :,10:12,:, :]
+                        predicted2 = predicted[:, :,14:16,:, :]
+                        predicted_block=[]
+                        predicted_block.append(predicted1)
+                        predicted_block.append(predicted2)
+                        predicted=torch.cat(predicted_block,dim=2)
+                        split = 2
                     else: 
                         predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
-                if self.params.model == "P4D":        
+                if self.params.model == "P4D":
+                    #print(predicted.shape)        
                     predicted = torch.split(predicted, 1,dim=2)
                     predicted_block = []
                     temp_block = []
                     for j,mi in enumerate(predicted):
-                        #print(mi.shape)
+                        #print(len(predicted))
+                        #print(j,mi.shape)
                         temp_block.append(mi.squeeze(2))
                         if (j+1) % split == 0:
                             predicted_block.append(torch.cat(temp_block,dim=3))
                             temp_block = []
+
                     predicted_block = torch.cat(predicted_block,dim=2)
                     predicted = predicted_block
-                
+                #print(predicted.shape,actual_block.shape)
                 loss = self.loss(predicted, actual_block)
 
 
@@ -506,7 +516,7 @@ class ModelOracle:
             self.model = GDN4l_NN
             print("GDN4l_NN")
         elif model_name == 'P4D':
-            from Models.P4dModel import P4D
+            from Models.P4d_7 import P4D
             self.model = P4D
             print("P4DModel")
         else:
