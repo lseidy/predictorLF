@@ -115,7 +115,7 @@ class LensletBlockedReferencer(Dataset):
         #if 8v then divide by 64 otherwise 128 to have the same ammount of samples
         if self.original.shape[2] < 5000:
             self.divisor = 64
-        else: self.divisor = 128
+        else: self.divisor = 64
 
         assert(self.decoded.shape == self.original.shape)
         self.shape = tuple(dim // self.divisor - 1 for dim in self.inner_shape[-2:])
@@ -139,8 +139,8 @@ class LensletBlockedReferencer(Dataset):
         #print("i: ", i,"j: ", j)
 
         if self.crop_mode == "sequential":
-            stepI = i * self.predictor_size
-            stepJ = j * self.predictor_size
+            stepI = i * self.context_size
+            stepJ = j * self.context_size
             section = self.decoded[:, stepI:stepI+self.context_size, stepJ:stepJ + self.context_size]
         elif self.crop_mode == "randomCrops":
             random_stepH = random.randint(0, self.max_steps_h)*8
@@ -200,23 +200,21 @@ class LensletBlockedReferencer(Dataset):
             return inputBLock, expected_block
         elif self.model == "P4D":
             inputBLock = torch.zeros(1, 16, 16, 16)
-            #for micro_pixel in section: 
+            
             splitSection_temp =  torch.split(neighborhood, 16, dim=1)
-            #for i in splitSection_temp:
-            #    print("split", i.shape)
             splitedSection = []
             for tensor in splitSection_temp:
                 splitedSection.extend(torch.split(tensor, 16, dim=2))
-#  
+
             lucasNeighborhood = []
-            for tensor in splitedSection:
-                lucasNeighborhood.append(tensor.unsqueeze(1)) 
+            for i,tensor in enumerate(splitedSection):
+                lucasNeighborhood.append(tensor.unsqueeze(1))
+
             
             lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
-        
+        #
             inputBLock = lucasNeighborhood[:, :, :, :]
 
-     
             return inputBLock, expected_block
 
 

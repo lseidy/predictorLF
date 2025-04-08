@@ -299,6 +299,8 @@ class Trainer:
                     #predicted = self.model(input1, input2, input3)
                    
                     predicted = self.model(neighborhood)
+
+                   
                     
                 else:
                     #print("shape: ", neighborhood.shape)
@@ -306,9 +308,8 @@ class Trainer:
                     input2= neighborhood[:,1:2,:,:].clone()
                     input3= neighborhood[:,2:3,:,:].clone()
                     predicted = self.model(input1, input2, input3)
-                
-                split = 4
-
+            
+                    
                 if (val == 1) or (self.params.save_train == True):
                     cpu_pred = predicted.cpu().detach()
                     cpu_orig = actual_block.cpu().detach()
@@ -316,7 +317,7 @@ class Trainer:
                     #print(cpu_pred.shape)
 
                     for bs_sample in range(0, cpu_pred.shape[0]):
-                        print(cpu_pred.shape[0], cpu_pred.shape)
+                        #print(cpu_pred.shape[0], cpu_pred.shape)
                         try:
                             
                             block_pred = cpu_pred[bs_sample]
@@ -333,8 +334,9 @@ class Trainer:
                             exit()
                         #print("block_pred: ", block_pred.shape)
                         if self.params.model == "P4D":
-                            counter+=1
-                            print(counter)
+                             #necessary for image reconstruction
+                            #TODO change split to mi_size/P4d_sizeBlock
+                            split = 4
                             #print("block_pred: ", block_pred.shape)
                             #print("block_orig: ", block_orig.shape)
                             #print("block_ref: ", block_ref.shape)
@@ -343,7 +345,6 @@ class Trainer:
                             pred = []
                             temp_block = []
                             for j,mi in enumerate(block_pred):
-                                #print(mi.shape)
                                 temp_block.append(mi.squeeze(1))
                                 if (j+1) % split == 0:
                                     pred.append(torch.cat(temp_block,dim=2))
@@ -516,7 +517,7 @@ class ModelOracle:
             self.model = GDN4l_NN
             print("GDN4l_NN")
         elif model_name == 'P4D':
-            from Models.P4d_7 import P4D
+            from Models.P4d_5 import P4D
             self.model = P4D
             print("P4DModel")
         else:
