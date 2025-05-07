@@ -135,8 +135,6 @@ class Trainer:
         if params.wandb_active:
             wandb.watch(self.model)
 
-
-
         parameters_to_prune = []
         for name, module in self.model.named_modules():
             if isinstance(module, torch.nn.Conv2d):
@@ -199,6 +197,7 @@ class Trainer:
 
         
             for epoch in range(params.resume_epoch, params.epochs+1):
+                
                 #0 for validation off
                 loss, entropy = self.train(epoch, 0, params.wandb_active)
                 print(f"Epoch {epoch}: {loss}, {entropy}")
@@ -292,16 +291,11 @@ class Trainer:
                     predicted = self.model(neighborhood, self.mask)
                 elif self.params.model != "siamese":
                     predicted = self.model(neighborhood)
-                elif self.params.model == "P4D":
-                    #input1= neighborhood[:,:16,:,:].clone()
-                    #input2= neighborhood[:,16:32,:,:].clone()
-                    #input3= neighborhood[:,32:48,:,:].clone()
-                    #predicted = self.model(input1, input2, input3)
-                   
+                elif self.params.model == "P4D":  
                     predicted = self.model(neighborhood)
-
-                   
-                    
+                elif self.params.model == "P4D_EPI":  
+                    predicted = self.model(neighborhood, )
+   
                 else:
                     #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
@@ -319,11 +313,8 @@ class Trainer:
                     for bs_sample in range(0, cpu_pred.shape[0]):
                         #print(cpu_pred.shape[0], cpu_pred.shape)
                         try:
-                            
                             block_pred = cpu_pred[bs_sample]
-                            
                             block_orig = cpu_orig[bs_sample]
-                            
                             block_ref = cpu_ref[bs_sample]
                             
                         except IndexError as e:
@@ -334,13 +325,11 @@ class Trainer:
                             exit()
                         #print("block_pred: ", block_pred.shape)
                         if self.params.model == "P4D":
-                             #necessary for image reconstruction
+                            
+                            #necessary for image reconstruction
                             #TODO change split to mi_size/P4d_sizeBlock
                             split = 4
-                            #print("block_pred: ", block_pred.shape)
-                            #print("block_orig: ", block_orig.shape)
-                            #print("block_ref: ", block_ref.shape)
-                            #
+                          
                             block_pred = torch.split(block_pred, 1,dim=1)
                             pred = []
                             temp_block = []
@@ -351,6 +340,7 @@ class Trainer:
                                     temp_block = []
                             pred = torch.cat(pred,dim=1)
                             block_pred= pred
+
 
                             block_ref = torch.split(block_ref, 1,dim=1)
                             ref = []
@@ -373,7 +363,7 @@ class Trainer:
                         self.count_blocks += 1
 
                         try:
-                            print(block_pred.shape)
+                            #print(block_pred.shape)
                             output_lf[:, it_j:it_j + self.params.context_size, it_i:it_i + self.params.context_size] = block_pred[:, :, :]
                         except RuntimeError as e:
                             print("counts error", it_i, it_j)
@@ -386,7 +376,7 @@ class Trainer:
                             it_i += self.params.context_size
 
                         #print("counts save", it_j, it_i)
-                        if it_i > resol_hor - self.params.context_size-1 and it_j == 0:
+                        if it_i > resol_hor - self.params.context_size-1 and it_j == 0 and current_epoch in range(0,self.params.epochs, 10):
                             print("counts save", it_j, it_i)
                             if val == 0:
                                 #print(num)
@@ -397,24 +387,16 @@ class Trainer:
                                 
                 if self.params.loss_mode == "predOnly":
                     if self.params.model == "P4D":
-                        predicted1 = predicted[:, :,10:12,:, :]
-                        predicted2 = predicted[:, :,14:16,:, :]
-                        predicted_block=[]
-                        predicted_block.append(predicted1)
-                        predicted_block.append(predicted2)
-                        predicted=torch.cat(predicted_block,dim=2)
+                        predicted = torch.cat([predicted[:, :, 10:12, :, :], predicted[:, :, 14:16, :, :]], dim=2)
                         split = 2
                     else: 
                         predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
-                if self.params.model == "P4D":
-                    #print(predicted.shape)        
+                if self.params.model == "P4D":       
                     predicted = torch.split(predicted, 1,dim=2)
                     predicted_block = []
                     temp_block = []
                     for j,mi in enumerate(predicted):
-                        #print(len(predicted))
-                        #print(j,mi.shape)
                         temp_block.append(mi.squeeze(2))
                         if (j+1) % split == 0:
                             predicted_block.append(torch.cat(temp_block,dim=3))
@@ -517,9 +499,13 @@ class ModelOracle:
             self.model = GDN4l_NN
             print("GDN4l_NN")
         elif model_name == 'P4D':
-            from Models.P4d_5 import P4D
+            from Models.P4d import P4D
             self.model = P4D
             print("P4DModel")
+        elif model_name == 'P4D_EPI':
+            from Models.P4D_test import P4D
+            self.model = P4D
+            print("P4DModel_EPI")
         else:
             print("Model not Found.")
             exit(404)

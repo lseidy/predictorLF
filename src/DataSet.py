@@ -79,7 +79,72 @@ class DataSet:
             exit(404)
 
 
+class Tools_EPI:
+    def __init__(self, visualize=True):
+        """
+        Classe utilitária para manipulação de Light Fields.
 
+        Args:
+            visualize (bool): se True, mostra as EPIs ao extrair.
+        """
+        self.visualize = visualize
+
+    def extract_epi(self, lf_tensor, direction='vertical', idx=0):
+        """
+        Extrai uma EPI e opcionalmente a visualiza.
+
+        Args:
+            lf_tensor (Tensor): Tensor com shape (B, U, V, H, W)
+            direction (str): 'horizontal' ou 'vertical'
+            idx (int): índice da amostra no batch
+
+        Returns:
+            Tensor: EPI concatenada com shape (1, U, V, L), onde L depende da direção
+        """
+        with torch.no_grad():
+            print("Shape do tensor de entrada:", lf_tensor.shape)
+            epis = []
+
+            if direction == 'horizontal':
+                for y in range(lf_tensor.shape[3]):  # H
+                    epi = lf_tensor[idx, :, :, y, :]
+                    epis.append(epi)
+                epis = torch.cat(epis, dim=2)  # concatena no eixo W
+            elif direction == 'vertical':
+                for x in range(lf_tensor.shape[4]):  # W
+                    epi = lf_tensor[idx, :, :, :, x]
+                    epis.append(epi)
+                epis = torch.cat(epis, dim=2)  # concatena no eixo H
+            else:
+                raise ValueError("Direção deve ser 'horizontal' ou 'vertical'")
+
+            epi_tensor = epis.unsqueeze(0)
+
+            return epi_tensor
+
+    def lenslet_to_lf(self, lenslet_img, V=16, H=16):
+        """
+        Converte imagem lenslet (ex: 256x256) em tensor Light Field com shape (B, V, H, Y, X)
+
+        Args:
+            lenslet_img (Tensor): imagem com shape (B, H_full, W_full)
+            V (int): número de views verticais
+            H (int): número de views horizontais
+
+        Returns:
+            Tensor: Light Field com shape (B, V, H, Y, X)
+        """
+        B, H_full, W_full = lenslet_img.shape
+        subimg_Y = H_full // V
+        subimg_X = W_full // H
+
+        lf = torch.zeros((B, V, H, subimg_Y, subimg_X), dtype=lenslet_img.dtype)
+
+        for v in range(V):
+            for h in range(H):
+                lf[:, v, h, :, :] = lenslet_img[:, v::V, h::H]
+
+        return lf
 class LazyList(Dataset):
     def __init__(self, inner_storage : List, transforms, bit_depth = 8):
         self.inner_storage = inner_storage
@@ -124,7 +189,7 @@ class LensletBlockedReferencer(Dataset):
         self.doTransforms = doTransforms
         self.max_steps_h = (self.inner_shape[3] - self.context_size) // 8
         self.max_steps_v = (self.inner_shape[2] - self.context_size) // 8
-
+        self.tool = Tools_EPI()
         
     def __len__(self):
         return self.len
@@ -168,7 +233,6 @@ class LensletBlockedReferencer(Dataset):
 
         neighborhood = torch.zeros(section.shape[0], *section.shape[1:], dtype=torch.float32)
         
-        #pra que serve isso?
         neighborhood[:, :, :] = section.to(neighborhood)
        
         if self.loss_mode == "predOnly":
@@ -180,15 +244,8 @@ class LensletBlockedReferencer(Dataset):
             print("ERROR Loss Mode Not Found", self.loss_mode)
                 
         
-        #if self.context_mode == 'avg':
-         #   avgtop = neighborhood[:, :self.predictor_size, :].mean()
-          #  avgleft = neighborhood[:, -self.predictor_size:, :self.predictor_size].mean()
-           # neighborhood[:, -self.predictor_size:, -self.predictor_size:] = (avgleft+avgtop)/2
-        #elif self.context_mode == 'black':
         neighborhood[:, -self.predictor_size:, -self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
-        #else: print("ERROR CONTEXT MODE NOT FOUND")
 
-        #print("Tradicionalmente chega isso:", neighborhood.shape)
         if self.model == "sepBlocks" or self.model == "siamese" or self.model == "zhong":
 
             inputBLock = torch.zeros(3,32,32)
@@ -198,24 +255,36 @@ class LensletBlockedReferencer(Dataset):
 
             #print(inputBLock.shape)
             return inputBLock, expected_block
+        elif self.model == "P4D_EPI":
+            
+            train_epi = self.tool.lenslet_to_lf(neighborhood.clone())
+            
+            EPI_inputBlock = torch.zeros(3,16,16,16)
+
+            EPI_h = self.tool.extract_epi(train_epi, 'horizontal')
+            EPI_v = self.tool.extract_epi(train_epi, 'vertical')
+            
+            inputBLock = neighborhood.clone()
+            inputBLock = inputBLock.view(1, 4, 16, 4, 16).permute(0, 1, 3, 2, 4).reshape(1, 16, 16, 16)
+            
+            EPI_inputBlock[0] = inputBLock
+            EPI_inputBlock[1] = EPI_h
+            EPI_inputBlock[2] = EPI_v
+            
+            
+            
+            return EPI_inputBlock, expected_block
+            
         elif self.model == "P4D":
-            inputBLock = torch.zeros(1, 16, 16, 16)
             
-            splitSection_temp =  torch.split(neighborhood, 16, dim=1)
-            splitedSection = []
-            for tensor in splitSection_temp:
-                splitedSection.extend(torch.split(tensor, 16, dim=2))
+            splitedSection = [block.unsqueeze(1)
+                  for intermediate_shape in torch.split(neighborhood, 16, dim=1)
+                  for block in torch.split(intermediate_shape, 16, dim=2)]
 
-            lucasNeighborhood = []
-            for i,tensor in enumerate(splitedSection):
-                lucasNeighborhood.append(tensor.unsqueeze(1))
+            inputBlock = torch.cat(splitedSection, dim=1)
 
-            
-            lucasNeighborhood = torch.cat(lucasNeighborhood, dim=1)
-        #
-            inputBLock = lucasNeighborhood[:, :, :, :]
 
-            return inputBLock, expected_block
+            return inputBlock, expected_block
 
 
         return neighborhood, expected_block

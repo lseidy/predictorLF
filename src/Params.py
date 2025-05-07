@@ -1,19 +1,19 @@
 import argparse
-
+import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    # Random seed for np and tf (-1 to avoid seeding)
-    parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
     
-    # Training parametes
-    parser.add_argument('--dataset-path', type=str, default='/home/pc-hinton/lucas/scratch/Datasets/Lenslet_16x16_Gscale',
-                        help='Direcory with training pngs')
-    parser.add_argument('--test-path', type=str, default='/home/pc-hinton/lucas/scratch/Datasets/Lenslet_16x16_Gscale',
-                        help='Direcory with test pngs')
-    parser.add_argument('--save-test',  dest='save_test', action='store_true', help='Save the predicted LFS on the test/validation')
-    parser.add_argument('--std-path', type=str, default='/home/pc-hinton/lucas/scratch',
-                        help='Direcory to be root of all others (saved_lfs, saved_models, etc)')
+    # Random seed
+    parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
+
+    # Caminho padrão para a raiz
+    parser.add_argument('--std-path', type=str, default='/mnt/c/Users/lucas/Documents/scratch',
+                        help='Diretório raiz para saved_lfs, saved_models, Datasets, etc.')
+
+    # Flag para salvar teste
+    parser.add_argument('--save-test', dest='save_test', action='store_true',
+                        help='Salva os LFs preditos no teste/validação')
 
     parser.add_argument('--context-size', type=int, default=64,
                         help='Size of the context [16,32,64, 128] (default 64x64))')
@@ -78,4 +78,8 @@ def get_args():
 
 
     args = parser.parse_args()
+    
+    # Construção dos caminhos derivados com base em std-path
+    args.dataset_path = os.path.join(args.std_path, 'Datasets', 'Lenslet_16x16_Gscale')
+    args.test_path = os.path.join(args.std_path, 'Datasets', 'Lenslet_16x16_Gscale')
     return args

@@ -75,29 +75,30 @@ class P4D(nn.Module):
         #print("--------------------\n Output3: ",output.shape,"\n--------------------" )
 
         return output
-#from argparse import Namespace
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#model = P4D().to(device)
-#model.eval()
-#file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTrainv3.pt"
-#train = torch.load(file_path).to(device)
-#file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTestv2.pt"
-#test = torch.load(file_path).to(device)
-#lossf = nn.MSELoss()
-#
-#
-#from torchsummary import summary
-#with torch.no_grad():
-#    batch_size = model(train)
-#    rem = RemDimension()
-#    batch_size= rem(batch_size)
-#    print("batch_size: ", batch_size.shape)
-#    #summary(model, train.shape, device=str(device))
-#    print(batch_size.shape)
-#
-#    print("loss: ", lossf(test, batch_size))
-#
-#
+from argparse import Namespace
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = P4D().to(device)
+model.eval()
+
+file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTrainv3.pt"
+train = torch.load(file_path).to(device)
+file_path = "/mnt/c/Users/lucas/Documents/TCC/Pytorch_learn/saved_testBlock/blockTestv2.pt"
+test = torch.load(file_path).to(device)
+lossf = nn.MSELoss()
+
+
+from torchsummary import summary
+with torch.no_grad():
+    batch_size = model(train)
+    rem = RemDimension()
+    batch_size= rem(batch_size)
+    print("batch_size: ", batch_size.shape)
+    #summary(model, train.shape, device=str(device))
+    print(batch_size.shape)
+
+    print("loss: ", lossf(test, batch_size))
+
+
 #batch_size = torch.split(batch_size, 1,dim=1)
 #
 #predicted_block = []
