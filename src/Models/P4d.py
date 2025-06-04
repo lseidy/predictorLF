@@ -75,7 +75,7 @@ class P4D(nn.Module):
         #print("--------------------\n Output3: ",output.shape,"\n--------------------" )
 
         return output
-from argparse import Namespace
+"""from argparse import Namespace
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = P4D().to(device)
 model.eval()
@@ -97,7 +97,7 @@ with torch.no_grad():
     print(batch_size.shape)
 
     print("loss: ", lossf(test, batch_size))
-
+"""
 
 #batch_size = torch.split(batch_size, 1,dim=1)
 #

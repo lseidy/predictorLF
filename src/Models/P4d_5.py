@@ -23,12 +23,8 @@ class P4D(nn.Module):
         super(P4D, self).__init__()
         n_filters = params.num_filters
  
-        self.pipeline = nn.Sequential( #16,16,16
+        self.spatial = nn.Sequential( #16,16,16
             nn.Conv3d(in_channels=1, out_channels=n_filters, kernel_size=(1, 3, 3), stride=(1,2,2), padding=(0,1,1)), nn.PReLU(),
-            nn.Conv3d(in_channels=n_filters, out_channels=n_filters*4, kernel_size=(3,1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
-
-            nn.Conv3d(in_channels=n_filters*4, out_channels=n_filters*8, kernel_size=(1, 3, 3), stride=(1,2,2), padding=(0,1,1)), nn.PReLU(),
-            nn.Conv3d(in_channels=n_filters*8, out_channels=n_filters*16, kernel_size=(3,1, 1), stride=(2,1,1), padding=(1,0,0)), nn.PReLU(),
             
             nn.Conv3d(in_channels=n_filters*16, out_channels=n_filters*16, kernel_size=3, stride=1, padding=1), nn.PReLU(),
 

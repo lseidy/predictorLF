@@ -102,7 +102,7 @@ class Tools_EPI:
             Tensor: EPI concatenada com shape (1, U, V, L), onde L depende da direção
         """
         with torch.no_grad():
-            print("Shape do tensor de entrada:", lf_tensor.shape)
+            #print("Shape do tensor de entrada:", lf_tensor.shape)
             epis = []
 
             if direction == 'horizontal':
@@ -120,6 +120,7 @@ class Tools_EPI:
 
             epi_tensor = epis.unsqueeze(0)
 
+            #print("Tensor de Saida:", epi_tensor.shape)
             return epi_tensor
 
     def lenslet_to_lf(self, lenslet_img, V=16, H=16):
@@ -245,7 +246,6 @@ class LensletBlockedReferencer(Dataset):
                 
         
         neighborhood[:, -self.predictor_size:, -self.predictor_size:] = torch.zeros((self.predictor_size, self.predictor_size))
-
         if self.model == "sepBlocks" or self.model == "siamese" or self.model == "zhong":
 
             inputBLock = torch.zeros(3,32,32)
@@ -255,11 +255,11 @@ class LensletBlockedReferencer(Dataset):
 
             #print(inputBLock.shape)
             return inputBLock, expected_block
-        elif self.model == "P4D_EPI":
-            
+        elif self.model == "P4D_mixed":
+            EPI_inputBlock = torch.zeros(3,16,16,16)
+
             train_epi = self.tool.lenslet_to_lf(neighborhood.clone())
             
-            EPI_inputBlock = torch.zeros(3,16,16,16)
 
             EPI_h = self.tool.extract_epi(train_epi, 'horizontal')
             EPI_v = self.tool.extract_epi(train_epi, 'vertical')
@@ -267,14 +267,12 @@ class LensletBlockedReferencer(Dataset):
             inputBLock = neighborhood.clone()
             inputBLock = inputBLock.view(1, 4, 16, 4, 16).permute(0, 1, 3, 2, 4).reshape(1, 16, 16, 16)
             
-            EPI_inputBlock[0] = inputBLock
-            EPI_inputBlock[1] = EPI_h
-            EPI_inputBlock[2] = EPI_v
-            
-            
-            
+            EPI_inputBlock[:1,:,:,:] = inputBLock
+            EPI_inputBlock[1:2,:,:,:] = EPI_h
+            EPI_inputBlock[2:3,:,:,:] = EPI_v
+
+            #print("INPUT: ", EPI_inputBlock.shape)
             return EPI_inputBlock, expected_block
-            
         elif self.model == "P4D":
             
             splitedSection = [block.unsqueeze(1)

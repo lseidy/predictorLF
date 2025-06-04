@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
 
     # Caminho padrão para a raiz
-    parser.add_argument('--std-path', type=str, default='/mnt/c/Users/lucas/Documents/scratch',
+    parser.add_argument('--std-path', type=str, default='/home/pc-hinton/lucas/scratch',
                         help='Diretório raiz para saved_lfs, saved_models, Datasets, etc.')
 
     # Flag para salvar teste

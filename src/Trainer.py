@@ -77,6 +77,7 @@ class Trainer:
 
         if torch.cuda.is_available():
             self.model.cuda()
+            print("Running on GPU!")
             device = torch.device("cuda")
         else:
             print("Running on CPU!")
@@ -105,6 +106,11 @@ class Trainer:
                 summary(self.model, (1, 16, 16, 16))
                 sys.stdout = out
                 summary(self.model, (1, 16, 16, 16))
+                sys.stdout = sys.__stdout__
+            elif self.model_name == "P4D_mixed":
+                summary(self.model, [(1, 16, 16, 16),(1, 16, 16, 16),(1, 16, 16, 16)])
+                sys.stdout = out
+                summary(self.model, [(1, 16, 16, 16),(1, 16, 16, 16),(1, 16, 16, 16)])
                 sys.stdout = sys.__stdout__
             else:
                 summary(self.model, (1, 64, 64))
@@ -271,7 +277,7 @@ class Trainer:
                                                   predictor_size=self.params.predictor_size,context_size=self.params.context_size, 
                                                   loss_mode=self.params.loss_mode, model= self.model_name, 
                                                   doTransforms = self.params.transforms, crop_mode=self.params.crop_mode)
-            
+    
             loader = DataLoader(referencer, batch_size=self.params.batch_size)
 
             
@@ -289,13 +295,15 @@ class Trainer:
 
                 if  self.params.model == "masked":
                     predicted = self.model(neighborhood, self.mask)
-                elif self.params.model != "siamese":
+                elif self.params.model == "siamese":
                     predicted = self.model(neighborhood)
                 elif self.params.model == "P4D":  
                     predicted = self.model(neighborhood)
-                elif self.params.model == "P4D_EPI":  
-                    predicted = self.model(neighborhood, )
-   
+                elif self.params.model == "P4D_mixed":
+                    input1= neighborhood[:,0,:,:,:].unsqueeze(1)
+                    input2= neighborhood[:,1,:,:,:].unsqueeze(1)
+                    input3= neighborhood[:,2,:,:,:].unsqueeze(1)
+                    predicted = self.model(input1, input2, input3)  
                 else:
                     #print("shape: ", neighborhood.shape)
                     input1= neighborhood[:,:1,:,:].clone()
@@ -324,7 +332,7 @@ class Trainer:
                             print(e)
                             exit()
                         #print("block_pred: ", block_pred.shape)
-                        if self.params.model == "P4D":
+                        if self.params.model == "P4D" or self.params.model == "P4D_mixed":
                             
                             #necessary for image reconstruction
                             #TODO change split to mi_size/P4d_sizeBlock
@@ -386,13 +394,13 @@ class Trainer:
                                 save_image(output_lf, f"{self.params.std_path}/saved_LFs/{self.config_name}/validation/allBlocks_{i}_{current_epoch}.png")
                                 
                 if self.params.loss_mode == "predOnly":
-                    if self.params.model == "P4D":
+                    if self.params.model == "P4D_mixed" or self.params.model == "P4D" :
                         predicted = torch.cat([predicted[:, :, 10:12, :, :], predicted[:, :, 14:16, :, :]], dim=2)
                         split = 2
                     else: 
                         predicted = predicted[:, :, -self.predictor_size_v:, -self.predictor_size_h:]      
 
-                if self.params.model == "P4D":       
+                if self.params.model == "P4D" or self.params.model == "P4D_mixed":   
                     predicted = torch.split(predicted, 1,dim=2)
                     predicted_block = []
                     temp_block = []
@@ -502,10 +510,10 @@ class ModelOracle:
             from Models.P4d import P4D
             self.model = P4D
             print("P4DModel")
-        elif model_name == 'P4D_EPI':
-            from Models.P4D_test import P4D
+        elif model_name == 'P4D_mixed':
+            from Models.P4D_combined_conv import P4D
             self.model = P4D
-            print("P4DModel_EPI")
+            print("P4DModel_MIXED")
         else:
             print("Model not Found.")
             exit(404)
