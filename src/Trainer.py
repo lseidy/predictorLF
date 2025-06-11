@@ -12,7 +12,6 @@ from skimage.measure import shannon_entropy
 from torchsummary import summary
 from DataSet import DataSet, LensletBlockedReferencer
 from prune import get_model_unstructured_sparsity
-
 import LightField as LF
 from customLearningRateScaler import CustomExpLr as lrScaler
 from customLosses import CustomLoss

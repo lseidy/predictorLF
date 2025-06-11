@@ -89,52 +89,46 @@ class P4D(nn.Module):
         super(P4D, self).__init__()
         n_filters = 32
 
-        self.spatial = nn.Sequential(
+        self.spatial = nn.Sequential( #saida 64X256X2X4X4
             nn.Conv3d(1, n_filters, kernel_size=(3,1,1), padding=1), nn.PReLU(),
             nn.Conv3d(n_filters, n_filters*2, kernel_size=(3,1,1), stride=2, padding=1), nn.PReLU(),
             nn.Conv3d(n_filters*2, n_filters*4, kernel_size=(3,1,1), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*4, n_filters*8, kernel_size=(3,1,1), stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*4, n_filters*16, kernel_size=(3,1,1), stride=2, padding=1), nn.PReLU(),
         )
-        self.angular = nn.Sequential(
+        self.angular = nn.Sequential( #saida 64X256X4X2X2
             nn.Conv3d(1, n_filters, kernel_size=(1,3,3), padding=1), nn.PReLU(),
             nn.Conv3d(n_filters, n_filters*2, kernel_size=(1,3,3), stride=2, padding=1), nn.PReLU(),
             nn.Conv3d(n_filters*2, n_filters*4, kernel_size=(1,3,3), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*4, n_filters*8, kernel_size=(1,3,3), stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*4, n_filters*16, kernel_size=(1,3,3), stride=2, padding=1), nn.PReLU(),
         )
-        self.epi_h = nn.Sequential(
-            nn.Conv3d(1, n_filters, kernel_size=(1,1,3), padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters, n_filters*2, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*2, n_filters*4, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*4, n_filters*8, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
+        self.epi_h = nn.Sequential( #saida 64X256X4X2X2
+            nn.Conv3d(1, n_filters, kernel_size=3, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters, n_filters*2, kernel_size=3, stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*2, n_filters*4, kernel_size=3, stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*4, n_filters*16, kernel_size=3, stride=2, padding=1), nn.PReLU(),
         )
-        self.epi_v = nn.Sequential(
-            nn.Conv3d(1, n_filters, kernel_size=(1,1,3), padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters, n_filters*2, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*2, n_filters*4, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
-            nn.Conv3d(n_filters*4, n_filters*8, kernel_size=(1,1,3), stride=2, padding=1), nn.PReLU(),
-        )
-
-        # Upsample para spatial
-        self.Upsample = nn.Sequential(
-            #AddDimension(),
-            UpsampleLayer(target_size=(4, 4, 2)),  # Aplica interpolação de trilinear
-            nn.Conv3d(n_filters*8, n_filters*8, kernel_size=3, stride=1,padding=1), nn.PReLU(),
-            #RemDimension()
+        self.epi_v = nn.Sequential( #saida 64X256X4X2X2
+            nn.Conv3d(1, n_filters, kernel_size=3, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters, n_filters*2, kernel_size=3, stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*2, n_filters*4, kernel_size=3, stride=2, padding=1), nn.PReLU(),
+            nn.Conv3d(n_filters*4, n_filters*16, kernel_size=3, stride=2, padding=1), nn.PReLU(),
         )
 
-
-        self.all = nn.Sequential(
-            nn.Conv3d(n_filters*8, n_filters*8, kernel_size=3, stride=1,padding=1), nn.PReLU()
+        self.all = nn.Sequential( #saida 64X1024X4X2X2
+            nn.Conv3d(4*n_filters*16, n_filters*16, kernel_size=3, stride=1,padding=1), nn.PReLU()
         )
+    
+        self.Upsample = UpsampleLayer((4,2,2))
 
-        self.deconv = nn.Sequential( # entrada 4x4x2
-            nn.ConvTranspose3d(n_filters*8, n_filters*4, kernel_size=3, stride=1, padding=(1,1,0)), nn.PReLU(),
+        self.deconv = nn.Sequential( #saida 64X1X16X16X16
 
-            nn.ConvTranspose3d(n_filters*4, n_filters*2, kernel_size=3, stride=2, padding=2), nn.PReLU(),
+            nn.ConvTranspose3d(n_filters*16, n_filters*4, kernel_size=3, stride=1, padding=(1,1,0)), nn.PReLU(),
+
+            nn.ConvTranspose3d(n_filters*4, n_filters*2, kernel_size=3, stride=2, padding=1,output_padding=1), nn.PReLU(),
        #
-            nn.ConvTranspose3d(n_filters*2, n_filters, kernel_size=3, stride=2, padding=2), nn.PReLU(),
-            #
-            nn.ConvTranspose3d(n_filters, 1, kernel_size=3, stride=2, padding=0, output_padding=(1)), nn.PReLU(),
+            nn.ConvTranspose3d(n_filters*2, n_filters, kernel_size=3, stride=2, padding=1,output_padding=1), nn.PReLU(),
+            
+            nn.ConvTranspose3d(n_filters, 1, kernel_size=3, stride=(1,2,1), padding=1,output_padding=(0,1,0)), nn.PReLU(),
             
         )
 
@@ -152,16 +146,14 @@ class P4D(nn.Module):
         epi_v = self.epi_v(EPI_v)
         #print("--------------------\n EPI_V: ",epi_v.shape,"\n--------------------")
 
-        upsample_spatial = self.Upsample(spatial)
-        #print("--------------------\n Upsample Spatial: ", upsample_spatial.shape,"\n--------------------")
+        angular = self.Upsample(angular)
+        spatial = self.Upsample(spatial)
+        epi_h = self.Upsample(epi_h)
+        epi_v = self.Upsample(epi_v)
 
-        upsample_angular = self.Upsample(angular)
-        #print("--------------------\n Upsample Angular: ", upsample_angular.shape,"\n--------------------")
-
-        output = upsample_angular + upsample_spatial + epi_h + epi_v
-        #print("--------------------\n output: ",output.shape,"\n--------------------")
-
-        output = self.all(output)
+        fused = torch.cat([spatial,angular,epi_v,epi_h],dim=1)
+        #print("--------------------\n output: ",fused.shape,"\n--------------------")
+        output = self.all(fused)
         #print("--------------------\n output2: ",output.shape,"\n--------------------")
         output = self.deconv(output)
         #print("--------------------\n output3: ",output.shape,"\n--------------------")

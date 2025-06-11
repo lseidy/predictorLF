@@ -146,6 +146,31 @@ class Tools_EPI:
                 lf[:, v, h, :, :] = lenslet_img[:, v::V, h::H]
 
         return lf
+    
+    def lf_to_lenslet(lf_tensor):
+        """        Converte um tensor de light field de volta para uma imagem lenslet.
+            Args:
+                lf_tensor (torch.Tensor): Tensor LF (B, V_ang_views, H_ang_views, Y_subimg, X_subimg)
+                                          V_ang_views é o número de vistas angulares na vertical (U_ang anterior)
+                                          H_ang_views é o número de vistas angulares na horizontal (V_ang anterior)
+            Returns:
+                torch.Tensor: Imagem lenslet reconstruída (B, H_full, W_full)
+        """
+
+        B, V_angular_views, H_angular_views, Y_subimg_spatial, X_subimg_spatial = lf_tensor.shape
+
+        H_full = Y_subimg_spatial * V_angular_views
+        W_full = X_subimg_spatial * H_angular_views
+
+        reconstructed_lenslet = torch.zeros((B, H_full, W_full), dtype=lf_tensor.dtype, device=lf_tensor.device)
+
+        for v_idx in range(V_angular_views):
+            for h_idx in range(H_angular_views):
+                sub_image = lf_tensor[:, v_idx, h_idx, :, :]
+                reconstructed_lenslet[:, v_idx::V_angular_views, h_idx::H_angular_views] = sub_image
+
+        return reconstructed_lenslet
+
 class LazyList(Dataset):
     def __init__(self, inner_storage : List, transforms, bit_depth = 8):
         self.inner_storage = inner_storage
@@ -226,12 +251,6 @@ class LensletBlockedReferencer(Dataset):
             section = self.transform(section)
         
 
-        # print("section ", section.shape)
-        """neighborhood = torch.ones(section.shape[0] + 1, *section.shape[1:], dtype=torch.float32)
-        neighborhood[:-1, :, :, :, :] = section.to(neighborhood)
-        neighborhood[:, :, :, self.predictor_size:, self.predictor_size:] = 0
-        expected_block = self.original[:, :, :, i * self.predictor_size : (i+2) * self.predictor_size, j * self.predictor_size : (j+2) * self.predictor_size].to(neighborhood)"""
-
         neighborhood = torch.zeros(section.shape[0], *section.shape[1:], dtype=torch.float32)
         
         neighborhood[:, :, :] = section.to(neighborhood)
@@ -259,11 +278,12 @@ class LensletBlockedReferencer(Dataset):
             EPI_inputBlock = torch.zeros(3,16,16,16)
 
             train_epi = self.tool.lenslet_to_lf(neighborhood.clone())
-            
+            #print(train_epi.shape)
 
             EPI_h = self.tool.extract_epi(train_epi, 'horizontal')
             EPI_v = self.tool.extract_epi(train_epi, 'vertical')
             
+            #print(EPI_h.shape, EPI_v.shape)
             inputBLock = neighborhood.clone()
             inputBLock = inputBLock.view(1, 4, 16, 4, 16).permute(0, 1, 3, 2, 4).reshape(1, 16, 16, 16)
             
